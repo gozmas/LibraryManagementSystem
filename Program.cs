@@ -1,3 +1,5 @@
+using LibraryManagementSystem.API.Mapping;
+using Serilog;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using LibraryManagementSystem.API.Validators;
@@ -14,6 +16,14 @@ using LibraryManagementSystem.API.Services.Interfaces;
 using LibraryManagementSystem.API.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddFluentValidationAutoValidation();
 
@@ -80,7 +90,10 @@ builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddScoped<IFineRepository, FineRepository>();
 builder.Services.AddScoped<IFineService, FineService>();
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<MappingProfile>();
+});
 Console.WriteLine("BOOK SERVICE REGISTERED");
 var app = builder.Build();
 app.UseMiddleware<LibraryManagementSystem.API.Middleware.ExceptionMiddleware>();
