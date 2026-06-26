@@ -1,3 +1,4 @@
+using LibraryManagementSystem.API.Responses;
 using Microsoft.AspNetCore.Authorization;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Services.Interfaces;
@@ -10,20 +11,31 @@ namespace LibraryManagementSystem.API.Controllers;
 public class LoanController : ControllerBase
 {
     private readonly ILoanService _loanService;
+    private readonly ILogger<LoanController> _logger;
 
-    public LoanController(ILoanService loanService)
+    public LoanController(
+        ILoanService loanService,
+        ILogger<LoanController> logger)
     {
         _loanService = loanService;
+        _logger = logger;
     }
 
-   [Authorize(Roles = "Admin")]
-[HttpGet]
-public async Task<IActionResult> GetLoans()
-{
-    var loans = await _loanService.GetAllAsync();
-    return Ok(loans);
-}
-     [Authorize(Roles = "Admin,Student")]
+    [Authorize(Roles = "Admin")]
+    [HttpGet]
+    public async Task<IActionResult> GetLoans()
+    {
+        var loans = await _loanService.GetAllAsync();
+
+        _logger.LogInformation("Loans listed successfully.");
+
+        return Ok(new ApiResponse<IEnumerable<LoanDto>>(
+            true,
+            "Loans retrieved successfully.",
+            loans));
+    }
+
+    [Authorize(Roles = "Admin,Student")]
     [HttpPost("borrow")]
     public async Task<IActionResult> BorrowBook(BorrowBookDto dto)
     {
@@ -31,11 +43,28 @@ public async Task<IActionResult> GetLoans()
 
         if (result == null)
         {
-            return BadRequest("Book not found or not available.");
+            _logger.LogWarning(
+                "Borrow failed. BookId: {BookId}, MemberId: {MemberId}",
+                dto.BookId,
+                dto.MemberId);
+
+            return BadRequest(new ApiResponse<object>(
+                false,
+                "Book not found or not available.",
+                null));
         }
 
-        return Ok(result);
+        _logger.LogInformation(
+            "Book borrowed successfully. BookId: {BookId}, MemberId: {MemberId}",
+            dto.BookId,
+            dto.MemberId);
+
+        return Ok(new ApiResponse<LoanDto>(
+            true,
+            "Book borrowed successfully.",
+            result));
     }
+
     [Authorize(Roles = "Admin,Student")]
     [HttpPost("return")]
     public async Task<IActionResult> ReturnBook(ReturnBookDto dto)
@@ -44,9 +73,23 @@ public async Task<IActionResult> GetLoans()
 
         if (result == null)
         {
-            return BadRequest("Loan not found or already returned.");
+            _logger.LogWarning(
+                "Return failed. LoanId: {LoanId}",
+                dto.LoanId);
+
+            return BadRequest(new ApiResponse<object>(
+                false,
+                "Loan not found or already returned.",
+                null));
         }
 
-        return Ok(result);
+        _logger.LogInformation(
+            "Book returned successfully. LoanId: {LoanId}",
+            dto.LoanId);
+
+        return Ok(new ApiResponse<LoanDto>(
+            true,
+            "Book returned successfully.",
+            result));
     }
 }
