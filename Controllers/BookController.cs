@@ -89,7 +89,18 @@ public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
 public async Task<IActionResult> SearchBooks([FromQuery] BookQueryDto query)
 {
     var result = await _bookService.SearchBooksAsync(query);
-    _logger.LogInformation("Book search executed.");
-    return Ok(result);
+
+   _logger.LogInformation(
+    "Book search executed. SearchTerm: {SearchTerm}, PageNumber: {PageNumber}, PageSize: {PageSize}, SortBy: {SortBy}, SortDirection: {SortDirection}",
+    query.SearchTerm,
+    query.PageNumber,
+    query.PageSize,
+    query.SortBy,
+    query.SortDirection);
+
+    return Ok(new ApiResponse<PagedResultDto<BookListDto>>(
+        true,
+        "Books retrieved successfully.",
+        result));
 }
 }

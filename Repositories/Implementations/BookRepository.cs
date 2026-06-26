@@ -21,12 +21,12 @@ namespace LibraryManagementSystem.API.Repositories.Implementations
         }
 
         public async Task<Book?> GetByIdAsync(int id)
-{
-    return await _context.Books
-        .Include(b => b.Author)
-        .Include(b => b.Category)
-        .FirstOrDefaultAsync(b => b.Id == id);
-}
+        {
+            return await _context.Books
+                .Include(b => b.Author)
+                .Include(b => b.Category)
+                .FirstOrDefaultAsync(b => b.Id == id);
+        }
 
         public async Task AddAsync(Book book)
         {
@@ -74,6 +74,34 @@ namespace LibraryManagementSystem.API.Repositories.Implementations
             {
                 booksQuery = booksQuery.Where(b => b.IsAvailable == query.IsAvailable.Value);
             }
+
+            var sortBy = query.SortBy?.Trim().ToLower();
+            var sortDirection = query.SortDirection?.Trim().ToLower();
+
+            booksQuery = sortBy switch
+            {
+                "title" => sortDirection == "desc"
+                    ? booksQuery.OrderByDescending(b => b.Title)
+                    : booksQuery.OrderBy(b => b.Title),
+
+                "publicationyear" => sortDirection == "desc"
+                    ? booksQuery.OrderByDescending(b => b.PublicationYear)
+                    : booksQuery.OrderBy(b => b.PublicationYear),
+
+                "isbn" => sortDirection == "desc"
+                    ? booksQuery.OrderByDescending(b => b.ISBN)
+                    : booksQuery.OrderBy(b => b.ISBN),
+
+                "author" => sortDirection == "desc"
+                    ? booksQuery.OrderByDescending(b => b.Author.FirstName)
+                    : booksQuery.OrderBy(b => b.Author.FirstName),
+
+                "category" => sortDirection == "desc"
+                    ? booksQuery.OrderByDescending(b => b.Category.Name)
+                    : booksQuery.OrderBy(b => b.Category.Name),
+
+                _ => booksQuery.OrderBy(b => b.Id)
+            };
 
             var totalCount = await booksQuery.CountAsync();
 

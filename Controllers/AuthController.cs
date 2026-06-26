@@ -1,4 +1,4 @@
-
+using LibraryManagementSystem.API.Responses;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
@@ -33,7 +33,10 @@ namespace LibraryManagementSystem.API.Controllers
         {
             if (_context.Users.Any(u => u.Email == dto.Email))
             {
-                return BadRequest("Email already exists.");
+                return BadRequest(new ApiResponse<object>(
+    false,
+    "Email already exists.",
+    null));
             }
 
            var user = new User
@@ -48,10 +51,10 @@ user.PasswordHash = new PasswordHasher<User>().HashPassword(user, dto.Password);
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            return Ok(new
-            {
-                message = "User registered successfully."
-            });
+           return Ok(new ApiResponse<object>(
+    true,
+    "User registered successfully.",
+    null));
         }
         [HttpPost("login")]
 public IActionResult Login(LoginDto dto)
@@ -61,7 +64,10 @@ public IActionResult Login(LoginDto dto)
 
     if (user == null)
     {
-        return Unauthorized("Invalid email or password.");
+        return Unauthorized(new ApiResponse<object>(
+    false,
+    "Invalid email or password.",
+    null));
     }
 
     var passwordHasher = new PasswordHasher<User>();
@@ -73,7 +79,10 @@ public IActionResult Login(LoginDto dto)
 
     if (result == PasswordVerificationResult.Failed)
     {
-        return Unauthorized("Invalid email or password.");
+        return Unauthorized(new ApiResponse<object>(
+    false,
+    "Invalid email or password.",
+    null));
     }
 
     var claims = new[]
@@ -101,13 +110,16 @@ var token = new JwtSecurityToken(
 var jwt = new JwtSecurityTokenHandler()
     .WriteToken(token);
 
-return Ok(new
-{
-    token = jwt,
-    username = user.Username,
-    email = user.Email,
-    role = user.Role
-});
+return Ok(new ApiResponse<object>(
+    true,
+    "Login successful.",
+    new
+    {
+        token = jwt,
+        username = user.Username,
+        email = user.Email,
+        role = user.Role
+    }));
 }
     }
 }
