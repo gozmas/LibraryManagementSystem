@@ -1,3 +1,6 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using LibraryManagementSystem.API.Validators;
 using LibraryManagementSystem.API.Middleware;
 using Microsoft.OpenApi.Models;
 using LibraryManagementSystem.API.Data;
@@ -12,6 +15,9 @@ using LibraryManagementSystem.API.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddFluentValidationAutoValidation();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CreateBookDtoValidator>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
