@@ -27,6 +27,16 @@ public BookController(
     _mapper = mapper;
     _logger = logger;
 }
+[AllowAnonymous]
+[HttpGet]
+public async Task<IActionResult> GetAllBooks()
+{
+    var books = await _bookService.GetAllAsync();
+
+    var bookDtos = _mapper.Map<List<BookListDto>>(books);
+
+    return Ok(bookDtos);
+}
 
 [AllowAnonymous]
 [HttpGet("{id}")]

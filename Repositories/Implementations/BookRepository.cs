@@ -16,9 +16,12 @@ namespace LibraryManagementSystem.API.Repositories.Implementations
         }
 
         public async Task<IEnumerable<Book>> GetAllAsync()
-        {
-            return await _context.Books.ToListAsync();
-        }
+{
+    return await _context.Books
+        .Include(b => b.Author)
+        .Include(b => b.Category)
+        .ToListAsync();
+}
 
         public async Task<Book?> GetByIdAsync(int id)
         {
