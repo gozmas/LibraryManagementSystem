@@ -36,15 +36,23 @@ public class AuthorController : ControllerBase
         return author;
     }
 
-    [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<Author>> CreateAuthor(Author author)
-    {
-        _context.Authors.Add(author);
-        await _context.SaveChangesAsync();
+   [HttpPost]
+[Authorize(Roles = "Admin")]
+public async Task<ActionResult<Author>> CreateAuthor(Author author)
+{
+   
+    var exists = await _context.Authors.AnyAsync(a => 
+        a.FirstName == author.FirstName && 
+        a.LastName == author.LastName);
 
-        return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);
-    }
+    if (exists)
+        return Conflict(new { message = "This author already exits." });
+
+    _context.Authors.Add(author);
+    await _context.SaveChangesAsync();
+
+    return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);
+}
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 namespace LibraryManagementSystem.API.Models;
 
 public class Book
@@ -18,5 +19,6 @@ public class Book
     public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();
 }

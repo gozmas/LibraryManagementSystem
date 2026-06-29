@@ -28,7 +28,7 @@ public BookController(
     _logger = logger;
 }
 
-[Authorize]
+[AllowAnonymous]
 [HttpGet("{id}")]
 public async Task<IActionResult> GetBook(int id)
 {
@@ -58,7 +58,10 @@ public async Task<ActionResult<Book>> CreateBook(CreateBookDto createBookDto)
     await _bookService.AddAsync(book);
     _logger.LogInformation("Book '{Title}' was created successfully.", book.Title);
 
-    return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
+    // Kaydedilen kitabı Author ve Category ile birlikte getir
+    var createdBook = await _bookService.GetByIdAsync(book.Id);
+
+    return CreatedAtAction(nameof(GetBook), new { id = book.Id }, createdBook);
 }
 
 [Authorize(Roles = "Admin")]
@@ -84,7 +87,7 @@ public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
     return NoContent();
 }
 
-[Authorize]
+[AllowAnonymous]
 [HttpGet("search")]
 public async Task<IActionResult> SearchBooks([FromQuery] BookQueryDto query)
 {
