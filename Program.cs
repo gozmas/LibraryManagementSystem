@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using LibraryManagementSystem.Models;
 using LibraryManagementSystem.API.Mapping;
 using Serilog;
 using FluentValidation;
@@ -119,4 +121,26 @@ app.MapGet("/weatherforecast", () =>
 
 app.MapControllers();
 
+// Admin seed
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    if (!context.Users.Any(u => u.Role == "Admin"))
+    {
+        var admin = new User
+        {
+            Username = "admin",
+            Email    = "admin@library.com",
+            Role     = "Admin"
+        };
+        admin.PasswordHash = new PasswordHasher<User>()
+            .HashPassword(admin, "Admin123!");
+
+        context.Users.Add(admin);
+        context.SaveChanges();
+    }
+}
+
 app.Run();
+

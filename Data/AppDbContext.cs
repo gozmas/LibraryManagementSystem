@@ -10,6 +10,15 @@ public class AppDbContext : DbContext
         : base(options)
     {
     }
+    // Data/AppDbContext.cs
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Member>()
+        .HasOne(m => m.User)
+        .WithOne(u => u.Member)
+        .HasForeignKey<Member>(m => m.UserId)
+        .OnDelete(DeleteBehavior.SetNull);  // user silinse bile member kaydı kalsın
+}
 
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Author> Authors => Set<Author>();

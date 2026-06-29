@@ -7,11 +7,14 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
 
-        optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Database=library_management_db;Username=gozdeyilikyilmaz;Password="
-        );
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+        optionsBuilder.UseNpgsql(config.GetConnectionString("DefaultConnection"));
 
         return new AppDbContext(optionsBuilder.Options);
     }

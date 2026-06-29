@@ -1,5 +1,6 @@
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,46 +18,36 @@ public class MemberController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<Member>>> GetMembers()
     {
         return await _context.Members.ToListAsync();
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Member>> GetMember(int id)
     {
         var member = await _context.Members.FindAsync(id);
 
         if (member == null)
-        {
             return NotFound();
-        }
 
         return member;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Member>> CreateMember(Member member)
-    {
-        _context.Members.Add(member);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetMember), new { id = member.Id }, member);
-    }
-
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateMember(int id, Member updatedMember)
     {
         var member = await _context.Members.FindAsync(id);
 
         if (member == null)
-        {
             return NotFound();
-        }
 
         member.FirstName = updatedMember.FirstName;
-        member.LastName = updatedMember.LastName;
-        member.Email = updatedMember.Email;
+        member.LastName  = updatedMember.LastName;
+        member.Email     = updatedMember.Email;
 
         await _context.SaveChangesAsync();
 
@@ -64,14 +55,13 @@ public class MemberController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteMember(int id)
     {
         var member = await _context.Members.FindAsync(id);
 
         if (member == null)
-        {
             return NotFound();
-        }
 
         _context.Members.Remove(member);
         await _context.SaveChangesAsync();

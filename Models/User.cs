@@ -1,4 +1,6 @@
+using LibraryManagementSystem.API.Models;
 namespace LibraryManagementSystem.Models
+
 {
     public class User
     {
@@ -11,5 +13,7 @@ namespace LibraryManagementSystem.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public string Role { get; set; } = "Member";
+
+        public Member? Member { get; set; }
     }
 }

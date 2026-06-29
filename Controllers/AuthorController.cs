@@ -1,5 +1,6 @@
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,25 +18,26 @@ public class AuthorController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
     {
         return await _context.Authors.ToListAsync();
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult<Author>> GetAuthor(int id)
     {
         var author = await _context.Authors.FindAsync(id);
 
         if (author == null)
-        {
             return NotFound();
-        }
 
         return author;
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Author>> CreateAuthor(Author author)
     {
         _context.Authors.Add(author);
@@ -45,17 +47,16 @@ public class AuthorController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateAuthor(int id, Author updatedAuthor)
     {
         var author = await _context.Authors.FindAsync(id);
 
         if (author == null)
-        {
             return NotFound();
-        }
 
         author.FirstName = updatedAuthor.FirstName;
-        author.LastName = updatedAuthor.LastName;
+        author.LastName  = updatedAuthor.LastName;
 
         await _context.SaveChangesAsync();
 
@@ -63,14 +64,13 @@ public class AuthorController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteAuthor(int id)
     {
         var author = await _context.Authors.FindAsync(id);
 
         if (author == null)
-        {
             return NotFound();
-        }
 
         _context.Authors.Remove(author);
         await _context.SaveChangesAsync();

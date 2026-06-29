@@ -1,0 +1,220 @@
+2026-06-29 09:04:14.425 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Role" = 'Admin')
+2026-06-29 09:04:14.482 +03:00 [INF] User profile is available. Using '/Users/gozdeyilikyilmaz/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-29 09:04:14.512 +03:00 [INF] Now listening on: http://localhost:5239
+2026-06-29 09:04:14.513 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-29 09:04:14.513 +03:00 [INF] Hosting environment: Development
+2026-06-29 09:04:14.513 +03:00 [INF] Content root path: /Users/gozdeyilikyilmaz/LibraryManagementSystem/LibraryManagementSystem.API
+2026-06-29 09:05:25.360 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger - null null
+2026-06-29 09:05:25.412 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger - 301 0 null 53.658ms
+2026-06-29 09:05:25.415 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/index.html - null null
+2026-06-29 09:05:25.443 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/index.html - 200 null text/html;charset=utf-8 28.343ms
+2026-06-29 09:05:25.919 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - null null
+2026-06-29 09:05:25.966 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 46.6112ms
+2026-06-29 09:06:52.782 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/Auth/register - application/json 132
+2026-06-29 09:06:52.855 +03:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:06:52'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-29 09:06:52.870 +03:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:06:52'.
+2026-06-29 09:06:52.873 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API)'
+2026-06-29 09:06:52.902 +03:00 [INF] Route matched with {action = "Register", controller = "Auth"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Register(LibraryManagementSystem.DTOs.RegisterDto) on controller LibraryManagementSystem.API.Controllers.AuthController (LibraryManagementSystem.API).
+2026-06-29 09:06:52.956 +03:00 [INF] Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+2026-06-29 09:06:52.965 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API) in 60.4846ms
+2026-06-29 09:06:52.965 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API)'
+2026-06-29 09:06:52.969 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/Auth/register - 400 null application/problem+json; charset=utf-8 187.6056ms
+2026-06-29 09:07:23.122 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/Auth/register - application/json 134
+2026-06-29 09:07:23.133 +03:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:07:23'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-29 09:07:23.135 +03:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:07:23'.
+2026-06-29 09:07:23.135 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API)'
+2026-06-29 09:07:23.139 +03:00 [INF] Route matched with {action = "Register", controller = "Auth"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Register(LibraryManagementSystem.DTOs.RegisterDto) on controller LibraryManagementSystem.API.Controllers.AuthController (LibraryManagementSystem.API).
+2026-06-29 09:07:23.269 +03:00 [INF] Executed DbCommand (38ms) [Parameters=[@dto_Email='?'], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Email" = @dto_Email)
+2026-06-29 09:07:23.460 +03:00 [INF] Executed DbCommand (8ms) [Parameters=[@p0='?', @p1='?', @p2='?', @p3='?'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Users" ("Email", "PasswordHash", "Role", "Username")
+VALUES (@p0, @p1, @p2, @p3)
+RETURNING "Id";
+2026-06-29 09:07:23.474 +03:00 [INF] Executed DbCommand (5ms) [Parameters=[@p4='?', @p5='?', @p6='?', @p7='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Members" ("Email", "FirstName", "LastName", "UserId")
+VALUES (@p4, @p5, @p6, @p7)
+RETURNING "Id";
+2026-06-29 09:07:23.483 +03:00 [INF] Executing OkObjectResult, writing value of type 'LibraryManagementSystem.API.Responses.ApiResponse`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-06-29 09:07:23.486 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API) in 346.1085ms
+2026-06-29 09:07:23.486 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Register (LibraryManagementSystem.API)'
+2026-06-29 09:07:23.488 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/Auth/register - 200 null application/json; charset=utf-8 366.7278ms
+2026-06-29 09:11:14.787 +03:00 [INF] Application is shutting down...
+2026-06-29 09:11:27.660 +03:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Role" = 'Admin')
+2026-06-29 09:11:27.712 +03:00 [INF] User profile is available. Using '/Users/gozdeyilikyilmaz/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-29 09:11:27.741 +03:00 [INF] Now listening on: http://localhost:5239
+2026-06-29 09:11:27.741 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-29 09:11:27.741 +03:00 [INF] Hosting environment: Development
+2026-06-29 09:11:27.741 +03:00 [INF] Content root path: /Users/gozdeyilikyilmaz/LibraryManagementSystem/LibraryManagementSystem.API
+2026-06-29 09:11:33.781 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/index.html - null null
+2026-06-29 09:11:33.848 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/index.html - 200 null text/html;charset=utf-8 67.747ms
+2026-06-29 09:11:34.539 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - null null
+2026-06-29 09:11:34.592 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 54.0741ms
+2026-06-29 09:12:34.325 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/Auth/login - application/json 62
+2026-06-29 09:12:34.394 +03:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:12:34'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-29 09:12:34.408 +03:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:12:34'.
+2026-06-29 09:12:34.410 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:12:34.422 +03:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Login(LibraryManagementSystem.DTOs.LoginDto) on controller LibraryManagementSystem.API.Controllers.AuthController (LibraryManagementSystem.API).
+2026-06-29 09:12:34.546 +03:00 [INF] Executed DbCommand (23ms) [Parameters=[@dto_Email='?'], CommandType='"Text"', CommandTimeout='30']
+SELECT u."Id", u."Email", u."PasswordHash", u."Role", u."Username"
+FROM "Users" AS u
+WHERE u."Email" = @dto_Email
+LIMIT 1
+2026-06-29 09:12:34.614 +03:00 [INF] Executing OkObjectResult, writing value of type 'LibraryManagementSystem.API.Responses.ApiResponse`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-06-29 09:12:34.618 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API) in 195.322ms
+2026-06-29 09:12:34.618 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:12:34.622 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/Auth/login - 200 null application/json; charset=utf-8 297.1445ms
+2026-06-29 09:17:37.953 +03:00 [INF] Application is shutting down...
+2026-06-29 09:32:25.798 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Role" = 'Admin')
+2026-06-29 09:32:25.850 +03:00 [INF] User profile is available. Using '/Users/gozdeyilikyilmaz/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-29 09:32:25.879 +03:00 [INF] Now listening on: http://localhost:5239
+2026-06-29 09:32:25.880 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-29 09:32:25.880 +03:00 [INF] Hosting environment: Development
+2026-06-29 09:32:25.880 +03:00 [INF] Content root path: /Users/gozdeyilikyilmaz/LibraryManagementSystem/LibraryManagementSystem.API
+2026-06-29 09:33:40.397 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/index.html - null null
+2026-06-29 09:33:40.465 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/index.html - 200 null text/html;charset=utf-8 68.82ms
+2026-06-29 09:33:41.048 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - null null
+2026-06-29 09:33:41.102 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 54.2592ms
+2026-06-29 09:34:25.705 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/Auth/login - application/json 61
+2026-06-29 09:34:25.770 +03:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:34:25'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-29 09:34:25.783 +03:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:34:25'.
+2026-06-29 09:34:25.786 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:34:25.798 +03:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Login(LibraryManagementSystem.DTOs.LoginDto) on controller LibraryManagementSystem.API.Controllers.AuthController (LibraryManagementSystem.API).
+2026-06-29 09:34:25.924 +03:00 [INF] Executed DbCommand (23ms) [Parameters=[@dto_Email='?'], CommandType='"Text"', CommandTimeout='30']
+SELECT u."Id", u."Email", u."PasswordHash", u."Role", u."Username"
+FROM "Users" AS u
+WHERE u."Email" = @dto_Email
+LIMIT 1
+2026-06-29 09:34:25.926 +03:00 [INF] Executing UnauthorizedObjectResult, writing value of type 'LibraryManagementSystem.API.Responses.ApiResponse`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-06-29 09:34:25.931 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API) in 130.9064ms
+2026-06-29 09:34:25.931 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:34:25.934 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/Auth/login - 401 null application/json; charset=utf-8 229.0396ms
+2026-06-29 09:35:09.160 +03:00 [INF] Application is shutting down...
+2026-06-29 09:36:39.982 +03:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Role" = 'Admin')
+2026-06-29 09:36:40.125 +03:00 [INF] Executed DbCommand (6ms) [Parameters=[@p0='?', @p1='?', @p2='?', @p3='?'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Users" ("Email", "PasswordHash", "Role", "Username")
+VALUES (@p0, @p1, @p2, @p3)
+RETURNING "Id";
+2026-06-29 09:36:40.140 +03:00 [INF] User profile is available. Using '/Users/gozdeyilikyilmaz/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-29 09:36:40.169 +03:00 [INF] Now listening on: http://localhost:5239
+2026-06-29 09:36:40.170 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-29 09:36:40.170 +03:00 [INF] Hosting environment: Development
+2026-06-29 09:36:40.170 +03:00 [INF] Content root path: /Users/gozdeyilikyilmaz/LibraryManagementSystem/LibraryManagementSystem.API
+2026-06-29 09:36:47.763 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/index.html - null null
+2026-06-29 09:36:47.827 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/index.html - 200 null text/html;charset=utf-8 67.0697ms
+2026-06-29 09:36:47.923 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - null null
+2026-06-29 09:36:47.966 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 43.0966ms
+2026-06-29 09:37:49.194 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/Auth/login - application/json 61
+2026-06-29 09:37:49.259 +03:00 [INF] Failed to validate the token.
+Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:37:49'.
+   at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+   at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+2026-06-29 09:37:49.270 +03:00 [INF] Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '26.06.2026 16:37:33', Current time (UTC): '29.06.2026 06:37:49'.
+2026-06-29 09:37:49.273 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:37:49.283 +03:00 [INF] Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Login(LibraryManagementSystem.DTOs.LoginDto) on controller LibraryManagementSystem.API.Controllers.AuthController (LibraryManagementSystem.API).
+2026-06-29 09:37:49.388 +03:00 [INF] Executed DbCommand (16ms) [Parameters=[@dto_Email='?'], CommandType='"Text"', CommandTimeout='30']
+SELECT u."Id", u."Email", u."PasswordHash", u."Role", u."Username"
+FROM "Users" AS u
+WHERE u."Email" = @dto_Email
+LIMIT 1
+2026-06-29 09:37:49.438 +03:00 [INF] Executing OkObjectResult, writing value of type 'LibraryManagementSystem.API.Responses.ApiResponse`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-06-29 09:37:49.443 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API) in 157.9753ms
+2026-06-29 09:37:49.443 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthController.Login (LibraryManagementSystem.API)'
+2026-06-29 09:37:49.446 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/Auth/login - 200 null application/json; charset=utf-8 252.1408ms
+2026-06-29 09:39:51.512 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/api/books/2 - null null
+2026-06-29 09:39:51.538 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API)'
+2026-06-29 09:39:51.553 +03:00 [INF] Route matched with {action = "GetBook", controller = "Book"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBook(Int32) on controller LibraryManagementSystem.API.Controllers.BookController (LibraryManagementSystem.API).
+2026-06-29 09:39:51.595 +03:00 [WRN] You do not have a valid license key for the Lucky Penny software AutoMapper. This is allowed for development and testing scenarios. If you are running in production you are required to have a licensed version. Please visit https://luckypennysoftware.com to obtain a valid license.
+2026-06-29 09:39:51.700 +03:00 [INF] Executed DbCommand (33ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT b."Id", b."AuthorId", b."CategoryId", b."ISBN", b."IsAvailable", b."PublicationYear", b."Title", a."Id", a."FirstName", a."LastName", c."Id", c."Name"
+FROM "Books" AS b
+INNER JOIN "Authors" AS a ON b."AuthorId" = a."Id"
+INNER JOIN "Categories" AS c ON b."CategoryId" = c."Id"
+WHERE b."Id" = @id
+LIMIT 1
+2026-06-29 09:39:51.726 +03:00 [INF] Executing OkObjectResult, writing value of type 'LibraryManagementSystem.API.Responses.ApiResponse`1[[LibraryManagementSystem.API.Dtos.BookListDto, LibraryManagementSystem.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-06-29 09:39:51.728 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API) in 174.9954ms
+2026-06-29 09:39:51.728 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API)'
+2026-06-29 09:39:51.730 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/api/books/2 - 200 null application/json; charset=utf-8 218.135ms
+2026-06-29 09:39:59.857 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/api/books/4 - null null
+2026-06-29 09:39:59.867 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API)'
+2026-06-29 09:39:59.867 +03:00 [INF] Route matched with {action = "GetBook", controller = "Book"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBook(Int32) on controller LibraryManagementSystem.API.Controllers.BookController (LibraryManagementSystem.API).
+2026-06-29 09:39:59.876 +03:00 [INF] Executed DbCommand (1ms) [Parameters=[@id='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT b."Id", b."AuthorId", b."CategoryId", b."ISBN", b."IsAvailable", b."PublicationYear", b."Title", a."Id", a."FirstName", a."LastName", c."Id", c."Name"
+FROM "Books" AS b
+INNER JOIN "Authors" AS a ON b."AuthorId" = a."Id"
+INNER JOIN "Categories" AS c ON b."CategoryId" = c."Id"
+WHERE b."Id" = @id
+LIMIT 1
+2026-06-29 09:39:59.876 +03:00 [WRN] Book with ID 4 was not found.
+2026-06-29 09:39:59.877 +03:00 [INF] Executing ObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ProblemDetails'.
+2026-06-29 09:39:59.884 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API) in 16.449ms
+2026-06-29 09:39:59.884 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.BookController.GetBook (LibraryManagementSystem.API)'
+2026-06-29 09:39:59.884 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/api/books/4 - 404 null application/problem+json; charset=utf-8 27.7214ms
+2026-06-29 09:42:55.098 +03:00 [INF] Application is shutting down...
+2026-06-29 09:46:38.877 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM "Users" AS u
+    WHERE u."Role" = 'Admin')
+2026-06-29 09:46:38.931 +03:00 [INF] User profile is available. Using '/Users/gozdeyilikyilmaz/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2026-06-29 09:46:38.961 +03:00 [INF] Now listening on: http://localhost:5239
+2026-06-29 09:46:38.962 +03:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-06-29 09:46:38.962 +03:00 [INF] Hosting environment: Development
+2026-06-29 09:46:38.962 +03:00 [INF] Content root path: /Users/gozdeyilikyilmaz/LibraryManagementSystem/LibraryManagementSystem.API
+2026-06-29 09:46:53.812 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/index.html - null null
+2026-06-29 09:46:53.861 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/index.html - 200 null text/html;charset=utf-8 49.9633ms
+2026-06-29 09:46:54.435 +03:00 [INF] Request starting HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - null null
+2026-06-29 09:46:54.486 +03:00 [INF] Request finished HTTP/1.1 GET http://localhost:5239/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 51.1892ms
+2026-06-29 09:47:02.543 +03:00 [INF] Request starting HTTP/1.1 POST http://localhost:5239/api/authors - application/json 50
+2026-06-29 09:47:02.606 +03:00 [INF] Executing endpoint 'LibraryManagementSystem.API.Controllers.AuthorController.CreateAuthor (LibraryManagementSystem.API)'
+2026-06-29 09:47:02.621 +03:00 [INF] Route matched with {action = "CreateAuthor", controller = "Author"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[LibraryManagementSystem.API.Models.Author]] CreateAuthor(LibraryManagementSystem.API.Models.Author) on controller LibraryManagementSystem.API.Controllers.AuthorController (LibraryManagementSystem.API).
+2026-06-29 09:47:02.738 +03:00 [INF] Executed DbCommand (11ms) [Parameters=[@p0='?', @p1='?'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO "Authors" ("FirstName", "LastName")
+VALUES (@p0, @p1)
+RETURNING "Id";
+2026-06-29 09:47:02.755 +03:00 [INF] Executing CreatedAtActionResult, writing value of type 'LibraryManagementSystem.API.Models.Author'.
+2026-06-29 09:47:02.765 +03:00 [INF] Executed action LibraryManagementSystem.API.Controllers.AuthorController.CreateAuthor (LibraryManagementSystem.API) in 142.4219ms
+2026-06-29 09:47:02.765 +03:00 [INF] Executed endpoint 'LibraryManagementSystem.API.Controllers.AuthorController.CreateAuthor (LibraryManagementSystem.API)'
+2026-06-29 09:47:02.768 +03:00 [INF] Request finished HTTP/1.1 POST http://localhost:5239/api/authors - 201 null application/json; charset=utf-8 225.2747ms
+2026-06-29 09:47:42.628 +03:00 [INF] Application is shutting down...
