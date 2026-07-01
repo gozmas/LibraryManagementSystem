@@ -107,10 +107,12 @@ builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddScoped<IFineRepository, FineRepository>();
 builder.Services.AddScoped<IFineService, FineService>();
+builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
-});
+}); 
 Console.WriteLine("BOOK SERVICE REGISTERED");
 var app = builder.Build();
 app.UseMiddleware<LibraryManagementSystem.API.Middleware.ExceptionMiddleware>();

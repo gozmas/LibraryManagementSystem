@@ -1,20 +1,25 @@
+using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Repositories.Interfaces;
 using LibraryManagementSystem.API.Services.Interfaces;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagementSystem.API.Services.Implementations;
 
 public class FineService : IFineService
 {
     private readonly IFineRepository _fineRepository;
+    private readonly AppDbContext _context;
 
     private const decimal DailyFineAmount = 5;
 
-    public FineService(IFineRepository fineRepository)
+    public FineService(
+        IFineRepository fineRepository,
+        AppDbContext context)
     {
         _fineRepository = fineRepository;
+        _context = context;
     }
 
     public async Task CreateFineIfNeededAsync(Loan loan)
@@ -25,7 +30,15 @@ public class FineService : IFineService
         if (loan.ReturnDate <= loan.DueDate)
             return;
 
-        var lateBusinessDays = CalculateBusinessDays(loan.DueDate, loan.ReturnDate.Value);
+        var existingFine = await _context.Fines
+            .AnyAsync(f => f.LoanId == loan.Id);
+
+        if (existingFine)
+            return;
+
+        var lateBusinessDays = CalculateBusinessDays(
+            loan.DueDate,
+            loan.ReturnDate.Value);
 
         if (lateBusinessDays <= 0)
             return;
@@ -39,55 +52,104 @@ public class FineService : IFineService
 
         await _fineRepository.AddAsync(fine);
     }
+
     public async Task<IEnumerable<FineDto>> GetAllAsync()
-{
-    var fines = await _fineRepository.GetAllAsync();
-
-    return fines.Select(f => new FineDto
     {
-        Id = f.Id,
-        LoanId = f.LoanId,
-        Amount = f.Amount,
-        IsPaid = f.IsPaid,
-        BookTitle = f.Loan.Book.Title,
-        MemberName = f.Loan.Member.FirstName + " " + f.Loan.Member.LastName
-    });
-}
+        var fines = await _context.Fines
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Book)
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Member)
+            .OrderByDescending(f => f.Id)
+            .ToListAsync();
 
-public async Task<FineDto?> GetByIdAsync(int id)
-{
-    var fine = await _fineRepository.GetByIdAsync(id);
+        return fines.Select(MapToFineDto);
+    }
 
-    if (fine == null)
-        return null;
-
-    return new FineDto
+    public async Task<FineDto?> GetByIdAsync(int id)
     {
-        Id = fine.Id,
-        LoanId = fine.LoanId,
-        Amount = fine.Amount,
-        IsPaid = fine.IsPaid,
-        BookTitle = fine.Loan.Book.Title,
-        MemberName = fine.Loan.Member.FirstName + " " + fine.Loan.Member.LastName
-    };
-}
+        var fine = await _context.Fines
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Book)
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Member)
+            .FirstOrDefaultAsync(f => f.Id == id);
 
-public async Task<bool> PayFineAsync(int id)
-{
-    var fine = await _fineRepository.GetByIdAsync(id);
+        if (fine == null)
+            return null;
 
-    if (fine == null)
-        return false;
+        return MapToFineDto(fine);
+    }
 
-    if (fine.IsPaid)
-        return false;
+    public async Task<IEnumerable<FineDto>> GetMyFinesAsync(int userId)
+    {
+        var fines = await _context.Fines
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Book)
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Member)
+            .Where(f => f.Loan.Member.UserId == userId)
+            .OrderByDescending(f => f.Id)
+            .ToListAsync();
 
-    fine.IsPaid = true;
+        return fines.Select(MapToFineDto);
+    }
 
-    await _fineRepository.UpdateAsync(fine);
+    public async Task<bool> PayFineAsync(
+        int id,
+        int userId,
+        bool isAdmin)
+    {
+        var fine = await _context.Fines
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Book)
+            .Include(f => f.Loan)
+                .ThenInclude(l => l.Member)
+            .FirstOrDefaultAsync(f => f.Id == id);
 
-    return true;
-}
+        if (fine == null)
+            return false;
+
+        if (fine.IsPaid)
+            return false;
+
+        if (!isAdmin)
+        {
+            var currentMember = await _context.Members
+                .FirstOrDefaultAsync(m => m.UserId == userId);
+
+            if (currentMember == null)
+                return false;
+
+            if (fine.Loan.MemberId != currentMember.Id)
+                return false;
+        }
+
+        fine.IsPaid = true;
+
+        await _fineRepository.UpdateAsync(fine);
+
+        return true;
+    }
+
+    private static FineDto MapToFineDto(Fine fine)
+    {
+        return new FineDto
+        {
+            Id = fine.Id,
+            LoanId = fine.LoanId,
+            Amount = fine.Amount,
+            IsPaid = fine.IsPaid,
+
+            BookTitle = fine.Loan?.Book != null
+                ? fine.Loan.Book.Title
+                : string.Empty,
+
+            MemberName = fine.Loan?.Member != null
+                ? fine.Loan.Member.FirstName + " " + fine.Loan.Member.LastName
+                : string.Empty
+        };
+    }
 
     private int CalculateBusinessDays(DateTime dueDate, DateTime returnDate)
     {
@@ -95,10 +157,10 @@ public async Task<bool> PayFineAsync(int id)
         var currentDate = dueDate.Date.AddDays(1);
         var endDate = returnDate.Date;
 
-        var holidays = GetOfficialHolidays(returnDate.Year);
-
         while (currentDate <= endDate)
         {
+            var holidays = GetOfficialHolidays(currentDate.Year);
+
             var isWeekend =
                 currentDate.DayOfWeek == DayOfWeek.Saturday ||
                 currentDate.DayOfWeek == DayOfWeek.Sunday;
