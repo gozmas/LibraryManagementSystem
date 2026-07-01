@@ -11,5 +11,10 @@ public interface IFineService
 
     Task<FineDto?> GetByIdAsync(int id);
 
-    Task<bool> PayFineAsync(int id);
+    Task<IEnumerable<FineDto>> GetMyFinesAsync(int userId);
+
+    Task<bool> PayFineAsync(
+        int id,
+        int userId,
+        bool isAdmin);
 }
