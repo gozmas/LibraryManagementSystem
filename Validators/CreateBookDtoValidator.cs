@@ -19,6 +19,9 @@ public class CreateBookDtoValidator : AbstractValidator<CreateBookDto>
             .InclusiveBetween(1450, DateTime.Now.Year)
             .WithMessage("Publication year must be valid.");
 
+        RuleFor(x => x.Description)
+            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
+
         RuleFor(x => x.AuthorId)
             .GreaterThan(0).WithMessage("AuthorId must be greater than 0.");
 

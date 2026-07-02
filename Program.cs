@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.API.Mapping;
@@ -26,6 +28,17 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
+    });
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
     });
 });
 Log.Logger = new LoggerConfiguration()
@@ -128,6 +141,7 @@ app.UseSwaggerUI(c =>
     
 }
     app.UseCors("AllowVueApp");
+    app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
 
