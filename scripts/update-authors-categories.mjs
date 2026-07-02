@@ -19,7 +19,7 @@ async function login() {
 }
 
 async function main() {
-  const raw = await readFile(new URL("./authors-categories-data.json", import.meta.url));
+  const raw = await readFile(new URL("./authors-categories-data-2.json", import.meta.url));
   const { authors, categories } = JSON.parse(raw);
 
   const token = await login();

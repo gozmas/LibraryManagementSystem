@@ -87,7 +87,21 @@ public class BookController : ControllerBase
                 null));
         }
 
+        var oldTotalCopies = book.TotalCopies;
+
         _mapper.Map(updateBookDto, book);
+
+        var copiesDelta = book.TotalCopies - oldTotalCopies;
+        var newAvailableCopies = book.AvailableCopies + copiesDelta;
+
+        if (newAvailableCopies < 0)
+            newAvailableCopies = 0;
+
+        if (newAvailableCopies > book.TotalCopies)
+            newAvailableCopies = book.TotalCopies;
+
+        book.AvailableCopies = newAvailableCopies;
+        book.IsAvailable = book.AvailableCopies > 0;
 
         await _bookService.UpdateAsync(book);
 
@@ -110,11 +124,11 @@ public class BookController : ControllerBase
                 null));
         }
 
-        if (!book.IsAvailable)
+        if (book.AvailableCopies < book.TotalCopies)
         {
             return BadRequest(new ApiResponse<object>(
                 false,
-                "Borrowed books cannot be deleted.",
+                "Some copies of this book are currently borrowed and cannot be deleted.",
                 null));
         }
 

@@ -82,6 +82,9 @@
 
             <label>Email</label>
             <input v-model="email" type="email" placeholder="name@email.com" />
+            <p v-if="email && !isEmailValid" class="field-hint">
+              Please enter a valid email address (e.g. name@email.com).
+            </p>
 
             <label>Password</label>
             <input v-model="password" type="password" placeholder="••••••••" />
@@ -105,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 
@@ -123,6 +126,10 @@ const confirmPassword = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
 const successMessage = ref("");
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isEmailValid = computed(() => emailPattern.test(email.value));
 
 const handleRegister = async () => {
   errorMessage.value = "";
@@ -142,6 +149,11 @@ const handleRegister = async () => {
 
   if (password.value !== confirmPassword.value) {
     errorMessage.value = "Passwords do not match.";
+    return;
+  }
+
+  if (!isEmailValid.value) {
+    errorMessage.value = "Please enter a valid email address.";
     return;
   }
 
@@ -368,6 +380,13 @@ input {
 
 input:focus {
   border-color: #166534;
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  color: #b45309;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .submit-btn {

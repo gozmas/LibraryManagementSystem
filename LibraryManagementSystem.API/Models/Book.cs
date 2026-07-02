@@ -13,6 +13,10 @@ public class Book
 
     public bool IsAvailable { get; set; } = true;
 
+    public int TotalCopies { get; set; } = 1;
+
+    public int AvailableCopies { get; set; } = 1;
+
     public string? Description { get; set; }
 
     public string? CoverUrl { get; set; }

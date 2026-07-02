@@ -9,9 +9,11 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<CreateBookDto, Book>()
-            .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => true));
+            .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => true))
+            .ForMember(dest => dest.AvailableCopies, opt => opt.MapFrom(src => src.TotalCopies));
 
-        CreateMap<UpdateBookDto, Book>();
+        CreateMap<UpdateBookDto, Book>()
+            .ForMember(dest => dest.AvailableCopies, opt => opt.Ignore());
 
         CreateMap<Book, BookListDto>()
             .ForMember(dest => dest.AuthorName,

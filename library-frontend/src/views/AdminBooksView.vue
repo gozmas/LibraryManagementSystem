@@ -207,6 +207,15 @@
               placeholder="Publication year"
             />
           </div>
+          <div class="form-group">
+            <label>Total Copies</label>
+            <input
+              v-model.number="form.totalCopies"
+              type="number"
+              min="1"
+              placeholder="Total copies"
+            />
+          </div>
 
           <div class="form-group">
             <label>Author</label>
@@ -278,6 +287,7 @@
                 <th>Author</th>
                 <th>Category</th>
                 <th>Year</th>
+                <th>Copies</th>
                 <th>Status</th>
                 <th class="actions-column">Actions</th>
               </tr>
@@ -293,6 +303,7 @@
                 <td>{{ book.authorName || "-" }}</td>
                 <td>{{ book.categoryName || "-" }}</td>
                 <td>{{ book.publicationYear || "-" }}</td>
+                <td>{{ book.availableCopies ?? 0 }} / {{ book.totalCopies ?? 1 }}</td>
 
                 <td>
                   <span
@@ -362,6 +373,7 @@ const form = reactive({
   title: "",
   isbn: "",
   publicationYear: "",
+  totalCopies: 1,
   authorId: "",
   categoryId: "",
 });
@@ -396,6 +408,7 @@ const resetForm = () => {
   form.title = "";
   form.isbn = "";
   form.publicationYear = "";
+  form.totalCopies = 1;
   form.authorId = "";
   form.categoryId = "";
 };
@@ -638,6 +651,7 @@ const submitBook = async () => {
     title: form.title,
     isbn: form.isbn,
     publicationYear: Number(form.publicationYear),
+    totalCopies: Number(form.totalCopies) || 1,
     authorId: Number(form.authorId),
     categoryId: Number(form.categoryId),
   };
@@ -684,6 +698,7 @@ const startEdit = (book) => {
   form.title = book.title || "";
   form.isbn = book.isbn || "";
   form.publicationYear = book.publicationYear || "";
+  form.totalCopies = book.totalCopies || 1;
   form.authorId = book.authorId || "";
   form.categoryId = book.categoryId || "";
 

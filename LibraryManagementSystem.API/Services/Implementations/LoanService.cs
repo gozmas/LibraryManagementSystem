@@ -43,7 +43,7 @@ public class LoanService : ILoanService
         if (book == null)
             return null;
 
-        if (!book.IsAvailable)
+        if (book.AvailableCopies <= 0)
             return null;
 
         int memberId;
@@ -78,7 +78,8 @@ public class LoanService : ILoanService
             IsReturned = false
         };
 
-        book.IsAvailable = false;
+        book.AvailableCopies -= 1;
+        book.IsAvailable = book.AvailableCopies > 0;
 
         await _loanRepository.AddAsync(loan);
         await _bookRepository.UpdateAsync(book);
@@ -121,7 +122,12 @@ public class LoanService : ILoanService
 
         if (loan.Book != null)
         {
-            loan.Book.IsAvailable = true;
+            if (loan.Book.AvailableCopies < loan.Book.TotalCopies)
+            {
+                loan.Book.AvailableCopies += 1;
+            }
+
+            loan.Book.IsAvailable = loan.Book.AvailableCopies > 0;
         }
 
         await _fineService.CreateFineIfNeededAsync(loan);

@@ -116,6 +116,9 @@
                 required
               />
             </div>
+            <p v-if="email && !isEmailValid" class="field-hint">
+              Please enter a valid email address (e.g. name@email.com).
+            </p>
 
             <label>Password</label>
             <div class="input-box">
@@ -169,7 +172,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { motion } from "motion-v";
@@ -185,11 +188,20 @@ const isDarkMode = ref(false);
 
 const API_BASE_URL = "http://localhost:5239";
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isEmailValid = computed(() => emailPattern.test(email.value));
+
 const handleLogin = async () => {
   errorMessage.value = "";
 
   if (!email.value || !password.value) {
     errorMessage.value = "Please enter email and password.";
+    return;
+  }
+
+  if (!isEmailValid.value) {
+    errorMessage.value = "Please enter a valid email address.";
     return;
   }
 
@@ -489,6 +501,13 @@ label {
   border: 0;
   outline: 0;
   font-size: 18px;
+}
+
+.field-hint {
+  margin: -16px 0 24px;
+  color: #b45309;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .eye-btn {

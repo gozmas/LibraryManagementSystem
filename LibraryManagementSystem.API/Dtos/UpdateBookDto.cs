@@ -15,6 +15,9 @@ public class UpdateBookDto
     [Range(1000, 2100)]
     public int PublicationYear { get; set; }
 
+    [Range(1, 1000)]
+    public int TotalCopies { get; set; } = 1;
+
     [StringLength(1000)]
     public string? Description { get; set; }
     public string? CoverUrl { get; set; }

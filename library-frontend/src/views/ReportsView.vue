@@ -8,6 +8,10 @@
         <p>View borrowed books, overdue books and fine reports.</p>
       </div>
 
+      <p v-if="actionMessage" :class="['action-message', actionMessageType]">
+        {{ actionMessage }}
+      </p>
+
       <p v-if="loading" class="state">Loading reports...</p>
       <p v-else-if="message" class="state">{{ message }}</p>
 
@@ -77,6 +81,7 @@
                   <th>Member</th>
                   <th>Amount</th>
                   <th>Status</th>
+                  <th class="actions-column">Actions</th>
                 </tr>
               </thead>
 
@@ -89,6 +94,16 @@
                     <span :class="['badge', fine.isPaid ? 'paid' : 'unpaid']">
                       {{ fine.isPaid ? "Paid" : "Unpaid" }}
                     </span>
+                  </td>
+                  <td class="actions-column">
+                    <button
+                      v-if="!fine.isPaid"
+                      class="pay-btn"
+                      :disabled="payingFineId === fine.fineId"
+                      @click="markAsPaid(fine)"
+                    >
+                      {{ payingFineId === fine.fineId ? "Marking..." : "Mark as Paid" }}
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -116,6 +131,10 @@ const fines = ref([]);
 
 const loading = ref(false);
 const message = ref("");
+
+const payingFineId = ref(null);
+const actionMessage = ref("");
+const actionMessageType = ref("success");
 
 const token = localStorage.getItem("token");
 
@@ -155,6 +174,39 @@ const getReports = async () => {
   loading.value = false;
 };
 
+const markAsPaid = async (fine) => {
+  actionMessage.value = "";
+  payingFineId.value = fine.fineId;
+
+  try {
+    await axios.put(
+      `${API_BASE_URL}/api/fines/${fine.fineId}/pay`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    fine.isPaid = true;
+    actionMessage.value = "Fine marked as paid.";
+    actionMessageType.value = "success";
+  } catch (error) {
+    console.error("Mark as paid failed:", error);
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data ||
+      "Could not mark this fine as paid.";
+
+    actionMessage.value = errorMessage;
+    actionMessageType.value = "error";
+  } finally {
+    payingFineId.value = null;
+  }
+};
+
 const formatDate = (date) => {
   if (!date) return "-";
   return new Date(date).toLocaleDateString();
@@ -192,6 +244,23 @@ onMounted(getReports);
 .header p {
   margin-top: 8px;
   color: #64748b;
+}
+
+.action-message {
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  font-weight: 800;
+}
+
+.action-message.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.action-message.error {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .report-section {
@@ -257,6 +326,27 @@ tr:last-child td {
 .unpaid {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.actions-column {
+  white-space: nowrap;
+}
+
+.pay-btn {
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 12px;
+  background: #166534;
+  color: white;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .state,

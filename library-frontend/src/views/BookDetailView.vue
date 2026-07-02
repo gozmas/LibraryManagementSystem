@@ -34,11 +34,12 @@
         <p>{{ book.description }}</p>
       </section>
 
-      <section class="info-grid">
+     <section class="info-grid">
         <DetailInfoBox title="Author" :value="book.authorName || 'Unknown'" />
         <DetailInfoBox title="Category" :value="book.categoryName || 'No category'" />
         <DetailInfoBox title="ISBN" :value="book.isbn || '-'" />
         <DetailInfoBox title="Publication Year" :value="book.publicationYear || '-'" />
+        <DetailInfoBox title="Available Copies" :value="`${book.availableCopies ?? 0} / ${book.totalCopies ?? 1}`" />
       </section>
 
       <p v-if="message" class="message">{{ message }}</p>

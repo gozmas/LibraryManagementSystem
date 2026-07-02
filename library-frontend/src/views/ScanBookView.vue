@@ -40,8 +40,15 @@
         <div class="scan-right">
           <div v-if="loadingLookup" class="status-box">Looking up ISBN...</div>
 
-          <div v-else-if="duplicateWarning" class="status-box warning">
-            This ISBN already exists in the library: <strong>{{ duplicateWarning }}</strong>
+          <div v-else-if="duplicateBook" class="status-box warning">
+            <p>
+              This ISBN already exists: <strong>{{ duplicateBook.title }}</strong>
+              ({{ duplicateBook.availableCopies ?? 0 }} / {{ duplicateBook.totalCopies ?? 1 }} available).
+            </p>
+
+            <button class="primary-btn" :disabled="addingCopy" @click="addCopy">
+              {{ addingCopy ? "Adding copy..." : "Add one more copy" }}
+            </button>
           </div>
 
           <div v-else-if="notFoundWarning" class="status-box warning">
@@ -161,7 +168,8 @@ const messageType = ref("success");
 const isScanning = ref(false);
 const manualIsbn = ref("");
 const loadingLookup = ref(false);
-const duplicateWarning = ref("");
+const duplicateBook = ref(null);
+const addingCopy = ref(false);
 const notFoundWarning = ref(false);
 const showForm = ref(false);
 const saving = ref(false);
@@ -229,7 +237,7 @@ const stopScan = async () => {
 
 const resetForm = () => {
   showForm.value = false;
-  duplicateWarning.value = "";
+  duplicateWarning.value = null;
   notFoundWarning.value = false;
   manualIsbn.value = "";
   Object.assign(form, {
@@ -264,7 +272,7 @@ const lookupIsbn = async (isbn) => {
     const duplicate = existingBooks.find((b) => b.isbn === cleanIsbn);
 
     if (duplicate) {
-      duplicateWarning.value = duplicate.title;
+      duplicateBook.value = duplicate;
       loadingLookup.value = false;
       return;
     }
@@ -337,7 +345,45 @@ const ensureCategory = async (name) => {
   );
   return created.data.id;
 };
+const addCopy = async () => {
+  if (!duplicateBook.value) return;
 
+  addingCopy.value = true;
+
+  try {
+    const book = duplicateBook.value;
+
+    await axios.put(
+      `${API_BASE_URL}/api/books/${book.id}`,
+      {
+        title: book.title,
+        isbn: book.isbn,
+        publicationYear: book.publicationYear,
+        totalCopies: (book.totalCopies || 1) + 1,
+        description: book.description || null,
+        coverUrl: book.coverUrl || null,
+        authorId: book.authorId,
+        categoryId: book.categoryId,
+      },
+      { headers }
+    );
+
+    sessionBooks.value.push({
+      title: book.title,
+      isbn: book.isbn,
+      author: book.authorName || "",
+      category: book.categoryName || "",
+    });
+
+    showMessage(`Added one more copy of "${book.title}".`, "success");
+    resetForm();
+  } catch (error) {
+    console.error(error);
+    showMessage("Could not add a copy.", "error");
+  } finally {
+    addingCopy.value = false;
+  }
+};
 const confirmAdd = async () => {
   saving.value = true;
 

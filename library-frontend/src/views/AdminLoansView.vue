@@ -24,6 +24,53 @@
         </div>
       </section>
 
+      <p v-if="issueMessage" :class="['message', issueMessageType]">
+        {{ issueMessage }}
+      </p>
+
+      <section class="issue-card">
+        <div class="form-header">
+          <h2>Issue a Loan</h2>
+          <p>Give a book directly to a member from here.</p>
+        </div>
+
+        <form class="issue-form" @submit.prevent="issueLoan">
+          <div class="form-group">
+            <label>Member</label>
+            <select v-model.number="issueForm.memberId">
+              <option disabled value="">Select member</option>
+
+              <option
+                v-for="member in members"
+                :key="member.id"
+                :value="member.id"
+              >
+                {{ member.firstName }} {{ member.lastName }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Book</label>
+            <select v-model.number="issueForm.bookId">
+              <option disabled value="">Select available book</option>
+
+              <option
+                v-for="book in availableBooks"
+                :key="book.id"
+                :value="book.id"
+              >
+                {{ book.title }}
+              </option>
+            </select>
+          </div>
+
+          <button class="primary-btn" type="submit" :disabled="issuing">
+            {{ issuing ? "Issuing..." : "Issue Loan" }}
+          </button>
+        </form>
+      </section>
+
       <section class="table-section">
         <div class="table-header">
           <div>
@@ -31,12 +78,21 @@
             <p>{{ loans.length }} loan records found in the system.</p>
           </div>
 
-          <input
-            v-model="search"
-            class="search"
-            type="text"
-            placeholder="Search by book or member..."
-          />
+         <div class="search-group">
+            <input
+              v-model="bookSearch"
+              class="search"
+              type="text"
+              placeholder="Search by book..."
+            />
+
+            <input
+              v-model="memberSearch"
+              class="search"
+              type="text"
+              placeholder="Search by member..."
+            />
+          </div>
         </div>
 
         <div class="table-card">
@@ -104,7 +160,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 
@@ -114,13 +170,33 @@ const router = useRouter();
 const API_BASE_URL = "http://localhost:5239";
 
 const loans = ref([]);
-const search = ref("");
+const members = ref([]);
+const books = ref([]);
+const bookSearch = ref("");
+const memberSearch = ref("");
+
+const issuing = ref(false);
+const issueMessage = ref("");
+const issueMessageType = ref("success");
+
+const issueForm = reactive({
+  memberId: "",
+  bookId: "",
+});
 
 const token = localStorage.getItem("token");
 
 const headers = {
   Authorization: `Bearer ${token}`,
 };
+
+const normalize = (response) => {
+  return response.data.data || response.data || [];
+};
+
+const availableBooks = computed(() => {
+  return books.value.filter((book) => book.isAvailable);
+});
 
 const getLoans = async () => {
   try {
@@ -132,6 +208,70 @@ const getLoans = async () => {
   } catch (error) {
     console.error("Admin loans load error:", error);
     loans.value = [];
+  }
+};
+
+const getMembers = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/members`, {
+      headers,
+    });
+
+    members.value = normalize(response);
+  } catch (error) {
+    console.error("Members load error:", error);
+    members.value = [];
+  }
+};
+
+const getBooks = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/books`);
+    books.value = normalize(response);
+  } catch (error) {
+    console.error("Books load error:", error);
+    books.value = [];
+  }
+};
+
+const issueLoan = async () => {
+  if (!issueForm.memberId || !issueForm.bookId) {
+    issueMessage.value = "Please select both a member and a book.";
+    issueMessageType.value = "error";
+    return;
+  }
+
+  try {
+    issuing.value = true;
+
+    await axios.post(
+      `${API_BASE_URL}/api/loans/borrow`,
+      {
+        bookId: issueForm.bookId,
+        memberId: issueForm.memberId,
+      },
+      { headers }
+    );
+
+    issueMessage.value = "Loan issued successfully.";
+    issueMessageType.value = "success";
+
+    issueForm.memberId = "";
+    issueForm.bookId = "";
+
+    await Promise.all([getLoans(), getBooks()]);
+  } catch (error) {
+    console.error("Issue loan error:", error);
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.response?.data ||
+      "Could not issue the loan.";
+
+    issueMessage.value = errorMessage;
+    issueMessageType.value = "error";
+  } finally {
+    issuing.value = false;
   }
 };
 
@@ -152,13 +292,14 @@ const overdueLoans = computed(() => {
 });
 
 const filteredLoans = computed(() => {
-  const value = search.value.toLowerCase();
+  const bookValue = bookSearch.value.toLowerCase();
+  const memberValue = memberSearch.value.toLowerCase();
 
   return loans.value.filter((loan) => {
     const book = loan.bookTitle?.toLowerCase() || "";
     const member = loan.memberName?.toLowerCase() || "";
 
-    return book.includes(value) || member.includes(value);
+    return book.includes(bookValue) && member.includes(memberValue);
   });
 });
 
@@ -171,7 +312,11 @@ const goAdmin = () => {
   router.push("/admin");
 };
 
-onMounted(getLoans);
+onMounted(() => {
+  getLoans();
+  getMembers();
+  getBooks();
+});
 </script>
 
 <style scoped>
@@ -256,6 +401,96 @@ onMounted(getLoans);
   font-weight: 700;
 }
 
+.message {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border-radius: 16px;
+  font-weight: 800;
+}
+
+.message.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.message.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.issue-card {
+  padding: 28px;
+  margin-bottom: 24px;
+  border-radius: 28px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+.form-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+}
+
+.form-header p {
+  margin: 7px 0 18px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.issue-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.form-group select {
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 15px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+  outline: none;
+}
+
+.form-group select:focus {
+  border-color: #166534;
+  background: white;
+}
+
+.primary-btn {
+  height: 52px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 15px;
+  background: #166534;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .table-section {
   padding: 28px;
   border-radius: 28px;
@@ -282,6 +517,10 @@ onMounted(getLoans);
   margin: 7px 0 0;
   color: #64748b;
   font-weight: 700;
+}
+.search-group {
+  display: flex;
+  gap: 12px;
 }
 
 .search {
@@ -379,6 +618,14 @@ tr:last-child td {
   .table-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .issue-form {
+    grid-template-columns: 1fr;
+  }
+  .search-group {
+    flex-direction: column;
+    width: 100%;
   }
 
   .search {

@@ -16,7 +16,12 @@
     </div>
 
     <div class="book-bottom">
-      <small>{{ book.categoryName || "No Category" }}</small>
+      <div>
+        <small>{{ book.categoryName || "No Category" }}</small>
+        <span class="copies">
+          {{ book.availableCopies ?? 0 }} / {{ book.totalCopies ?? 1 }} available
+        </span>
+      </div>
 
       <span :class="['badge', book.isAvailable ? 'available' : 'borrowed']">
         {{ book.isAvailable ? "Available" : "Borrowed" }}
@@ -99,9 +104,21 @@ p {
   gap: 12px;
 }
 
+.book-bottom > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 small {
   color: #166534;
   font-weight: 800;
+}
+
+.copies {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .badge {

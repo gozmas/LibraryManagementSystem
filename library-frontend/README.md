@@ -4,17 +4,20 @@ A full-stack library automation system built with **ASP.NET Core Web API** and *
 
 ## Features
 
-- **Authentication & Authorization** — JWT-based login/register, role-based access control (Admin / Member)
+- **Authentication & Authorization** — JWT-based login/register, role-based access control (Admin / Member), with live client-side email format validation
 - **Book, Author, Category Management** — full CRUD, with search, filtering, sorting, and pagination
-- **Loan System** — borrow/return flow, active loan tracking, overdue detection
-- **Fine Calculation** — automatic late fee calculation based on business days (weekends and official holidays excluded)
+- **Copy Tracking** — each book has a total and available copy count; borrowing/returning automatically adjusts availability, and a book only shows as "Borrowed" once all copies are checked out
+- **Loan System** — members can borrow/return books themselves, and admins can issue a loan directly to any member from the admin panel; active loan tracking and overdue detection with separate search filters by book and by member
+- **Fine Calculation** — automatic late fee calculation based on business days (weekends and official holidays excluded), with an admin action to mark individual fines as paid
 - **Reports** — borrowed books, overdue books, and fine reports for admins
 - **Admin Panel** — manage books, authors (with biography), categories (with description), and view loan/fine reports
 - **Book Covers & Descriptions** — books can have a cover image and a summary shown on their detail page
+- **Barcode Scanning** — admins can scan a book's ISBN barcode (or enter it manually) to auto-fill title, author, category, description and cover image via the Google Books API, with duplicate ISBN detection before adding
 - **Rate Limiting** — login endpoint is protected against brute-force attempts
 - **API Documentation** — fully documented and testable via Swagger UI, including JWT bearer auth
 - **Logging** — structured logging via Serilog, written to daily rolling log files
 - **Animations** — page transitions and staggered list animations on the frontend via Motion for Vue
+- **Unit Tests** — a dedicated test project covering core service and repository logic
 
 ## Tech Stack
 
@@ -32,6 +35,8 @@ A full-stack library automation system built with **ASP.NET Core Web API** and *
 - Vue Router
 - Axios
 - motion-v (Motion for Vue) for UI animations
+- html5-qrcode for ISBN barcode scanning
+- Google Books API for barcode-based book lookup
 
 ## Project Structure
 
@@ -51,6 +56,7 @@ LibraryManagementSystem/
 │       ├── views/
 │       ├── components/
 │       └── router/
+├── LibraryManagementSystem.Tests/   # Unit tests for services and repositories
 └── scripts/                         # One-off data seeding utilities (Node.js)
 ```
 
@@ -131,11 +137,16 @@ node scripts/backfill-covers.mjs
 | Categories | `DELETE /api/categories/{id}`      | Admin         |
 | Loans      | `GET /api/loans/my`                | Member        |
 | Loans      | `GET /api/loans`                   | Admin         |
-| Loans      | `POST /api/loans/borrow`           | Member        |
+| Loans      | `POST /api/loans/borrow`           | Member, Admin (can issue to any member) |
+| Loans      | `POST /api/loans/return`           | Member, Admin |
 | Fines      | `GET /api/fines/my`                | Member        |
+| Fines      | `GET /api/fines`                   | Admin         |
+| Fines      | `PUT /api/fines/{id}/pay`          | Member, Admin |
 | Reports    | `GET /api/reports/*`               | Admin         |
 
 Full request/response schemas are available in Swagger UI.
+
+**Note on barcode scanning:** the scan feature does not require a dedicated backend endpoint. The frontend calls the public Google Books API directly (`GET https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}`) to look up a scanned ISBN, then uses the existing `POST /api/books`, `POST /api/authors` and `POST /api/categories` endpoints to save the result.
 
 ## Security Notes
 
