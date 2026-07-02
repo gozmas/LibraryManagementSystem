@@ -15,6 +15,10 @@ public class CreateBookDto
     [Range(1000, 2100)]
     public int PublicationYear { get; set; }
 
+    [StringLength(1000)]
+    public string? Description { get; set; }
+    public string? CoverUrl { get; set; }
+
     [Range(1, int.MaxValue)]
     public int AuthorId { get; set; }
 

@@ -65,13 +65,14 @@ public async Task<ActionResult<Author>> CreateAuthor(Author author)
 
         author.FirstName = updatedAuthor.FirstName;
         author.LastName  = updatedAuthor.LastName;
+        author.Biography = updatedAuthor.Biography;
 
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+  [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteAuthor(int id)
     {
@@ -80,9 +81,16 @@ public async Task<ActionResult<Author>> CreateAuthor(Author author)
         if (author == null)
             return NotFound();
 
-        _context.Authors.Remove(author);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.Authors.Remove(author);
+            await _context.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "This author has books linked to them and cannot be deleted." });
+        }
     }
 }

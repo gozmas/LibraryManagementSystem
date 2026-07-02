@@ -56,13 +56,14 @@ public class CategoryController : ControllerBase
             return NotFound();
 
         category.Name = updatedCategory.Name;
+        category.Description = updatedCategory.Description;
 
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+   [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
@@ -71,9 +72,16 @@ public class CategoryController : ControllerBase
         if (category == null)
             return NotFound();
 
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "This category has books linked to it and cannot be deleted." });
+        }
     }
 }

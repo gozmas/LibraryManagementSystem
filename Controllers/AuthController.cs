@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using LibraryManagementSystem.API.Responses;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Data;
@@ -62,9 +63,10 @@ namespace LibraryManagementSystem.API.Controllers
                 role      = user.Role
             }));
         }
-
+[EnableRateLimiting("login")]
         [HttpPost("login")]
         public IActionResult Login(LoginDto dto)
+       
         {
             var user = _context.Users
                 .FirstOrDefault(u => u.Email == dto.Email);
