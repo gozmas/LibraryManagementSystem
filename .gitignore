@@ -1,10 +1,28 @@
+# .NET
 bin/
 obj/
 .vs/
-.vscode/
 *.user
 *.suo
 *.db
 *.db-shm
 *.db-wal
 appsettings.Development.json
+
+# Node / Vue frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+Logs/
