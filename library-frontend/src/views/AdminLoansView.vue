@@ -105,6 +105,7 @@
                 <th>Due Date</th>
                 <th>Return Date</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
 
@@ -146,6 +147,16 @@
                     Active
                   </span>
                 </td>
+                <td>
+                  <button
+                    v-if="!isReturned(loan)"
+                    class="return-btn"
+                    @click="openReturnModal(loan)"
+                  >
+                    Return
+                  </button>
+                  <span v-else class="done-label">—</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -155,6 +166,50 @@
           </p>
         </div>
       </section>
+      <div v-if="returnModalLoan" class="modal-overlay" @click.self="closeReturnModal">
+        <div class="modal-card">
+          <h2>Return Book</h2>
+          <p class="modal-sub">
+            <strong>{{ returnModalLoan.bookTitle }}</strong> — borrowed by {{ returnModalLoan.memberName }}
+          </p>
+
+          <div class="condition-group">
+            <label
+              v-for="option in conditionOptions"
+              :key="option.value"
+              :class="['condition-option', { selected: returnForm.condition === option.value }]"
+            >
+              <input
+                type="radio"
+                name="condition"
+                :value="option.value"
+                v-model="returnForm.condition"
+              />
+              <span>{{ option.label }}</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>Note (optional)</label>
+            <textarea
+              v-model="returnForm.note"
+              rows="3"
+              placeholder="e.g. torn cover, missing pages..."
+            ></textarea>
+          </div>
+
+          <p v-if="returnMessage" class="modal-message">{{ returnMessage }}</p>
+
+          <div class="modal-actions">
+            <button class="secondary-btn" type="button" @click="closeReturnModal">
+              Cancel
+            </button>
+            <button class="primary-btn" type="button" :disabled="returning" @click="confirmReturn">
+              {{ returning ? "Processing..." : "Confirm Return" }}
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -272,6 +327,62 @@ const issueLoan = async () => {
     issueMessageType.value = "error";
   } finally {
     issuing.value = false;
+  }
+};
+const returnModalLoan = ref(null);
+const returning = ref(false);
+const returnMessage = ref("");
+
+const conditionOptions = [
+  { value: "Good", label: "Good" },
+  { value: "Damaged", label: "Damaged" },
+  { value: "Lost", label: "Lost" },
+];
+
+const returnForm = reactive({
+  condition: "Good",
+  note: "",
+});
+
+const openReturnModal = (loan) => {
+  returnModalLoan.value = loan;
+  returnForm.condition = "Good";
+  returnForm.note = "";
+  returnMessage.value = "";
+};
+
+const closeReturnModal = () => {
+  returnModalLoan.value = null;
+};
+
+const confirmReturn = async () => {
+  if (!returnModalLoan.value) return;
+
+  try {
+    returning.value = true;
+    returnMessage.value = "";
+
+    await axios.post(
+      `${API_BASE_URL}/api/loans/return`,
+      {
+        loanId: returnModalLoan.value.id,
+        condition: returnForm.condition,
+        conditionNote: returnForm.note || null,
+      },
+      { headers }
+    );
+
+    closeReturnModal();
+    await Promise.all([getLoans(), getBooks()]);
+  } catch (error) {
+    console.error("Return error:", error);
+
+    returnMessage.value =
+      error.response?.data?.message ||
+      error.response?.data ||
+      "Return failed.";
+  } finally {
+    returning.value = false;
   }
 };
 
@@ -518,6 +629,7 @@ onMounted(() => {
   color: #64748b;
   font-weight: 700;
 }
+
 .search-group {
   display: flex;
   gap: 12px;
@@ -611,6 +723,138 @@ tr:last-child td {
   padding: 24px;
   color: #64748b;
   font-weight: 700;
+}
+
+.return-btn {
+  height: 38px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 12px;
+  background: #111;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.done-label {
+  color: #cbd5e1;
+  font-weight: 900;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 28px;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.25);
+}
+
+.modal-card h2 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.modal-sub {
+  margin: 0 0 20px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.condition-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.condition-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  border-radius: 13px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  font-weight: 800;
+  cursor: pointer;
+  color: #334155;
+}
+
+.condition-option input {
+  accent-color: #166534;
+}
+
+.condition-option.selected {
+  border-color: #166534;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.modal-card .form-group {
+  margin-bottom: 18px;
+}
+
+.modal-card textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-card textarea:focus {
+  border-color: #166534;
+  background: white;
+}
+
+.modal-message {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 800;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-actions .secondary-btn {
+  height: 48px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.modal-actions .primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 900px) {
