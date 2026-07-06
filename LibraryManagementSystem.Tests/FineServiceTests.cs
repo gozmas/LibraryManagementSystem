@@ -1,152 +1,200 @@
+using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Repositories.Interfaces;
 using LibraryManagementSystem.API.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 
 namespace LibraryManagementSystem.Tests;
 
+// NOT: FineService, ceza sorgularını (PayFineAsync, CreateFineIfNeededAsync,
+// CreateConditionFineIfNeededAsync) doğrudan _context üzerinden yapıyor,
+// _fineRepository sadece AddAsync/UpdateAsync için kullanılıyor. Bu yüzden
+// context'i mocklamak yerine EF Core InMemory ile gerçek context kullanıyoruz.
 public class FineServiceTests
 {
+    private static AppDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new AppDbContext(options);
+    }
+
     [Fact]
     public async Task PayFineAsync_Should_Return_False_When_Fine_Not_Found()
     {
         var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-        fineRepositoryMock
-            .Setup(repo => repo.GetByIdAsync(999))
-            .ReturnsAsync((Fine?)null);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-        var service = new FineService(fineRepositoryMock.Object);
+        var result = await service.PayFineAsync(999, userId: 1, isAdmin: true);
 
-        var result = await service.PayFineAsync(999);
-
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(404, result.StatusCode);
     }
 
     [Fact]
     public async Task PayFineAsync_Should_Return_False_When_Fine_Already_Paid()
     {
         var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-        var fine = new Fine
-        {
-            Id = 1,
-            LoanId = 1,
-            Amount = 10,
-            IsPaid = true
-        };
+        var loan = new Loan { Id = 1, BookId = 1, MemberId = 1 };
+        var fine = new Fine { Id = 1, LoanId = 1, Loan = loan, Amount = 10, IsPaid = true };
 
-        fineRepositoryMock
-            .Setup(repo => repo.GetByIdAsync(1))
-            .ReturnsAsync(fine);
+        context.Loans.Add(loan);
+        context.Fines.Add(fine);
+        await context.SaveChangesAsync();
 
-        var service = new FineService(fineRepositoryMock.Object);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-        var result = await service.PayFineAsync(1);
+        var result = await service.PayFineAsync(1, userId: 1, isAdmin: true);
 
-        Assert.False(result);
+        Assert.False(result.Success);
+        Assert.Equal(409, result.StatusCode);
     }
 
     [Fact]
     public async Task PayFineAsync_Should_Return_True_And_Update_Fine_When_Fine_Is_Unpaid()
     {
         var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-        var fine = new Fine
-        {
-            Id = 1,
-            LoanId = 1,
-            Amount = 10,
-            IsPaid = false
-        };
+        var loan = new Loan { Id = 1, BookId = 1, MemberId = 1 };
+        var fine = new Fine { Id = 1, LoanId = 1, Loan = loan, Amount = 10, IsPaid = false };
 
-        fineRepositoryMock
-            .Setup(repo => repo.GetByIdAsync(1))
-            .ReturnsAsync(fine);
+        context.Loans.Add(loan);
+        context.Fines.Add(fine);
+        await context.SaveChangesAsync();
 
         fineRepositoryMock
-            .Setup(repo => repo.UpdateAsync(fine))
+            .Setup(repo => repo.UpdateAsync(It.IsAny<Fine>()))
             .Returns(Task.CompletedTask);
 
-        var service = new FineService(fineRepositoryMock.Object);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-        var result = await service.PayFineAsync(1);
+        // isAdmin: true -> üye eşleşme kontrolü atlanır
+        var result = await service.PayFineAsync(1, userId: 1, isAdmin: true);
 
-        Assert.True(result);
-        Assert.True(fine.IsPaid);
+        Assert.True(result.Success);
 
-        fineRepositoryMock.Verify(repo => repo.UpdateAsync(fine), Times.Once);
+        var updatedFine = await context.Fines.FindAsync(1);
+        Assert.NotNull(updatedFine);
+        Assert.True(updatedFine!.IsPaid);
+
+        fineRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<Fine>()), Times.Once);
     }
+
     [Fact]
-public async Task CreateFineIfNeededAsync_Should_Not_Create_Fine_When_ReturnDate_Is_Null()
-{
-    var fineRepositoryMock = new Mock<IFineRepository>();
-
-    var loan = new Loan
+    public async Task CreateFineIfNeededAsync_Should_Not_Create_Fine_When_ReturnDate_Is_Null()
     {
-        Id = 1,
-        DueDate = DateTime.UtcNow.AddDays(-5),
-        ReturnDate = null
-    };
+        var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-    var service = new FineService(fineRepositoryMock.Object);
+        var loan = new Loan
+        {
+            Id = 1,
+            BookId = 1,
+            MemberId = 1,
+            DueDate = DateTime.UtcNow.AddDays(-5),
+            ReturnDate = null
+        };
 
-    await service.CreateFineIfNeededAsync(loan);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-    fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Never);
-}
+        await service.CreateFineIfNeededAsync(loan);
 
-[Fact]
-public async Task CreateFineIfNeededAsync_Should_Not_Create_Fine_When_Returned_On_Time()
-{
-    var fineRepositoryMock = new Mock<IFineRepository>();
+        fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Never);
+    }
 
-    var loan = new Loan
+    [Fact]
+    public async Task CreateFineIfNeededAsync_Should_Not_Create_Fine_When_Returned_On_Time()
     {
-        Id = 1,
-        DueDate = DateTime.UtcNow,
-        ReturnDate = DateTime.UtcNow
-    };
+        var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-    var service = new FineService(fineRepositoryMock.Object);
+        var loan = new Loan
+        {
+            Id = 1,
+            BookId = 1,
+            MemberId = 1,
+            DueDate = DateTime.UtcNow,
+            ReturnDate = DateTime.UtcNow
+        };
 
-    await service.CreateFineIfNeededAsync(loan);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-    fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Never);
-}
+        await service.CreateFineIfNeededAsync(loan);
 
-[Fact]
-public async Task CreateFineIfNeededAsync_Should_Create_Fine_When_Returned_Late()
-{
-    var fineRepositoryMock = new Mock<IFineRepository>();
+        fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Never);
+    }
 
-    var dueDate = new DateTime(2026, 6, 22);      // Pazartesi
-    var returnDate = new DateTime(2026, 6, 25);   // Perşembe
-
-    var loan = new Loan
+    [Fact]
+    public async Task CreateFineIfNeededAsync_Should_Create_Fine_When_Returned_Late()
     {
-        Id = 1,
-        DueDate = dueDate,
-        ReturnDate = returnDate
-    };
+        var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
 
-    Fine? createdFine = null;
+        var dueDate = new DateTime(2026, 6, 22);      // Pazartesi
+        var returnDate = new DateTime(2026, 6, 25);   // Perşembe
 
-    fineRepositoryMock
-        .Setup(repo => repo.AddAsync(It.IsAny<Fine>()))
-        .Callback<Fine>(fine => createdFine = fine)
-        .Returns(Task.CompletedTask);
+        var loan = new Loan
+        {
+            Id = 1,
+            BookId = 1,
+            MemberId = 1,
+            DueDate = dueDate,
+            ReturnDate = returnDate
+        };
 
-    var service = new FineService(fineRepositoryMock.Object);
+        Fine? createdFine = null;
 
-    await service.CreateFineIfNeededAsync(loan);
+        fineRepositoryMock
+            .Setup(repo => repo.AddAsync(It.IsAny<Fine>()))
+            .Callback<Fine>(fine => createdFine = fine)
+            .Returns(Task.CompletedTask);
 
-    fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Once);
+        var service = new FineService(fineRepositoryMock.Object, context);
 
-    Assert.NotNull(createdFine);
-    Assert.Equal(1, createdFine.LoanId);
-    Assert.Equal(15, createdFine.Amount);
-    Assert.False(createdFine.IsPaid);
-}
+        await service.CreateFineIfNeededAsync(loan);
+
+        fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Once);
+
+        Assert.NotNull(createdFine);
+        Assert.Equal(1, createdFine!.LoanId);
+        Assert.Equal(15, createdFine.Amount);
+        Assert.False(createdFine.IsPaid);
+        Assert.Equal(FineReason.Late, createdFine.Reason);
+    }
+
+    [Fact]
+    public async Task CreateFineIfNeededAsync_Should_Not_Duplicate_Fine_When_Late_Fine_Already_Exists()
+    {
+        var fineRepositoryMock = new Mock<IFineRepository>();
+        await using var context = CreateContext();
+
+        var loan = new Loan
+        {
+            Id = 1,
+            BookId = 1,
+            MemberId = 1,
+            DueDate = new DateTime(2026, 6, 22),
+            ReturnDate = new DateTime(2026, 6, 25)
+        };
+
+        context.Loans.Add(loan);
+        context.Fines.Add(new Fine { Id = 1, LoanId = 1, Loan = loan, Amount = 15, Reason = FineReason.Late });
+        await context.SaveChangesAsync();
+
+        var service = new FineService(fineRepositoryMock.Object, context);
+
+        await service.CreateFineIfNeededAsync(loan);
+
+        // Zaten bir "Late" ceza kaydı olduğu için ikinci bir tane oluşturulmamalı
+        fineRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<Fine>()), Times.Never);
+    }
 }
