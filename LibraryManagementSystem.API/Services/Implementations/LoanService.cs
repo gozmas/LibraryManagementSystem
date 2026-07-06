@@ -1,3 +1,4 @@
+using LibraryManagementSystem.API.Common;
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Models;
@@ -33,7 +34,7 @@ public class LoanService : ILoanService
         return loans.Select(MapToLoanDto);
     }
 
-    public async Task<LoanDto?> BorrowBookAsync(
+    public async Task<ServiceResult<LoanDto>> BorrowBookAsync(
         BorrowBookDto dto,
         int userId,
         bool isAdmin)
@@ -41,16 +42,16 @@ public class LoanService : ILoanService
         var book = await _bookRepository.GetByIdAsync(dto.BookId);
 
         if (book == null)
-            return null;
+            return ServiceResult<LoanDto>.Fail("Book not found.", 404);
 
         if (book.AvailableCopies <= 0)
-            return null;
+            return ServiceResult<LoanDto>.Fail("This book has no available copies right now.", 409);
 
         var availableCopy = await _context.BookCopies
             .FirstOrDefaultAsync(c => c.BookId == dto.BookId && c.Status == CopyStatus.Available);
 
         if (availableCopy == null)
-            return null;
+            return ServiceResult<LoanDto>.Fail("This book has no available copies right now.", 409);
 
         int memberId;
 
@@ -60,7 +61,7 @@ public class LoanService : ILoanService
                 .AnyAsync(m => m.Id == dto.MemberId);
 
             if (!memberExists)
-                return null;
+                return ServiceResult<LoanDto>.Fail("Member not found.", 404);
 
             memberId = dto.MemberId;
         }
@@ -70,7 +71,7 @@ public class LoanService : ILoanService
                 .FirstOrDefaultAsync(m => m.UserId == userId);
 
             if (currentMember == null)
-                return null;
+                return ServiceResult<LoanDto>.Fail("No member profile found for the current user.", 404);
 
             memberId = currentMember.Id;
         }
@@ -90,18 +91,35 @@ public class LoanService : ILoanService
         book.AvailableCopies -= 1;
         book.IsAvailable = book.AvailableCopies > 0;
 
-        await _loanRepository.AddAsync(loan);
-        await _bookRepository.UpdateAsync(book);
+        // Loan eklenmesi, kopya durumunun ve kitabın güncellenmesi tek bir
+        // veritabanı işlemi (transaction) olarak ele alınmalı: biri başarısız
+        // olursa hepsi geri alınmalı. Repository'lerin kendi SaveChangesAsync
+        // çağrıları aynı DbContext'i paylaştığı için pratikte zaten birlikte
+        // gidiyorlardı; burada bunu bilinçli ve açık hale getiriyoruz.
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            await _loanRepository.AddAsync(loan);
+            await _bookRepository.UpdateAsync(book);
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
 
         var createdLoan = await _loanRepository.GetByIdAsync(loan.Id);
 
         if (createdLoan == null)
-            return null;
+            return ServiceResult<LoanDto>.Fail("Loan was created but could not be retrieved.", 500);
 
-        return MapToLoanDto(createdLoan);
+        return ServiceResult<LoanDto>.Ok(MapToLoanDto(createdLoan));
     }
 
-    public async Task<LoanDto?> ReturnBookAsync(
+    public async Task<ServiceResult<LoanDto>> ReturnBookAsync(
         ReturnBookDto dto,
         int userId,
         bool isAdmin)
@@ -109,10 +127,10 @@ public class LoanService : ILoanService
         var loan = await _loanRepository.GetByIdAsync(dto.LoanId);
 
         if (loan == null)
-            return null;
+            return ServiceResult<LoanDto>.Fail("Loan not found.", 404);
 
         if (loan.IsReturned || loan.ReturnDate != null)
-            return null;
+            return ServiceResult<LoanDto>.Fail("This loan has already been returned.", 409);
 
         if (!isAdmin)
         {
@@ -120,10 +138,10 @@ public class LoanService : ILoanService
                 .FirstOrDefaultAsync(m => m.UserId == userId);
 
             if (currentMember == null)
-                return null;
+                return ServiceResult<LoanDto>.Fail("No member profile found for the current user.", 404);
 
             if (loan.MemberId != currentMember.Id)
-                return null;
+                return ServiceResult<LoanDto>.Fail("You are not allowed to return this loan.", 403);
         }
 
         loan.ReturnDate = DateTime.UtcNow;
@@ -152,12 +170,28 @@ public class LoanService : ILoanService
 
             loan.Book.IsAvailable = loan.Book.AvailableCopies > 0;
         }
-        await _fineService.CreateFineIfNeededAsync(loan);
-        await _fineService.CreateConditionFineIfNeededAsync(loan, dto.Condition);
 
-        await _loanRepository.UpdateAsync(loan);
+        // Loan kapatma + kopya/kitap güncellemesi + ceza oluşturma (varsa)
+        // tek bir transaction: cezalardan biri oluşurken hata olursa loan
+        // "iade edildi" olarak yarım kalmamalı.
+        await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        return MapToLoanDto(loan);
+        try
+        {
+            await _fineService.CreateFineIfNeededAsync(loan);
+            await _fineService.CreateConditionFineIfNeededAsync(loan, dto.Condition);
+
+            await _loanRepository.UpdateAsync(loan);
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
+        return ServiceResult<LoanDto>.Ok(MapToLoanDto(loan));
     }
 
     public async Task<IEnumerable<LoanDto>> GetMyLoansAsync(int userId)

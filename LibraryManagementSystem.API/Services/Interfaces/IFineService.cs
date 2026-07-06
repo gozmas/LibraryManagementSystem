@@ -1,3 +1,4 @@
+using LibraryManagementSystem.API.Common;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Models;
 
@@ -15,7 +16,7 @@ public interface IFineService
 
     Task<IEnumerable<FineDto>> GetMyFinesAsync(int userId);
 
-    Task<bool> PayFineAsync(
+    Task<ServiceResult<object>> PayFineAsync(
         int id,
         int userId,
         bool isAdmin);

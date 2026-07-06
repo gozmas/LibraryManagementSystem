@@ -1,3 +1,4 @@
+using LibraryManagementSystem.API.Common;
 using LibraryManagementSystem.API.Dtos;
 
 namespace LibraryManagementSystem.API.Services.Interfaces;
@@ -6,12 +7,12 @@ public interface ILoanService
 {
     Task<IEnumerable<LoanDto>> GetAllAsync();
 
-    Task<LoanDto?> BorrowBookAsync(
+    Task<ServiceResult<LoanDto>> BorrowBookAsync(
         BorrowBookDto dto,
         int userId,
         bool isAdmin);
 
-    Task<LoanDto?> ReturnBookAsync(
+    Task<ServiceResult<LoanDto>> ReturnBookAsync(
         ReturnBookDto dto,
         int userId,
         bool isAdmin);

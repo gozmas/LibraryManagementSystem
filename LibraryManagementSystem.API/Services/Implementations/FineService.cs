@@ -1,3 +1,4 @@
+using LibraryManagementSystem.API.Common;
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Models;
@@ -131,7 +132,7 @@ public class FineService : IFineService
         return fines.Select(MapToFineDto);
     }
 
-    public async Task<bool> PayFineAsync(
+    public async Task<ServiceResult<object>> PayFineAsync(
         int id,
         int userId,
         bool isAdmin)
@@ -144,10 +145,10 @@ public class FineService : IFineService
             .FirstOrDefaultAsync(f => f.Id == id);
 
         if (fine == null)
-            return false;
+            return ServiceResult<object>.Fail("Fine not found.", 404);
 
         if (fine.IsPaid)
-            return false;
+            return ServiceResult<object>.Fail("This fine has already been paid.", 409);
 
         if (!isAdmin)
         {
@@ -155,17 +156,17 @@ public class FineService : IFineService
                 .FirstOrDefaultAsync(m => m.UserId == userId);
 
             if (currentMember == null)
-                return false;
+                return ServiceResult<object>.Fail("No member profile found for the current user.", 404);
 
             if (fine.Loan.MemberId != currentMember.Id)
-                return false;
+                return ServiceResult<object>.Fail("You are not allowed to pay this fine.", 403);
         }
 
         fine.IsPaid = true;
 
         await _fineRepository.UpdateAsync(fine);
 
-        return true;
+        return ServiceResult<object>.Ok(new { });
     }
 
     private static FineDto MapToFineDto(Fine fine)
