@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 
 const routes = [
   {
@@ -32,48 +31,59 @@ const routes = [
   },
  {
   path: '/my-loans',
-  component: () => import('../views/MyLoansView.vue')
+  component: () => import('../views/MyLoansView.vue'),
+  meta: { requiresAuth: true }
 },
 {
   path: "/my-fines",
-  component: () => import("../views/MyFinesView.vue")
+  component: () => import("../views/MyFinesView.vue"),
+  meta: { requiresAuth: true }
 },
 {
   path: "/profile",
-  component: () => import("../views/ProfileView.vue")
+  component: () => import("../views/ProfileView.vue"),
+  meta: { requiresAuth: true }
 },
   {
   path: "/member",
-  component: () => import("../views/MemberView.vue")
+  component: () => import("../views/MemberView.vue"),
+  meta: { requiresAuth: true }
 },
   {
   path: "/reports",
-  component: () => import("../views/ReportsView.vue")
+  component: () => import("../views/ReportsView.vue"),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
   {
   path: '/admin',
-  component: () => import('../views/AdminView.vue')
+  component: () => import('../views/AdminView.vue'),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
 {
   path: "/admin/books",
-  component: () => import("../views/AdminBooksView.vue")
+  component: () => import("../views/AdminBooksView.vue"),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
 {
   path: "/admin/loans",
-  component: () => import("../views/AdminLoansView.vue")
+  component: () => import("../views/AdminLoansView.vue"),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
 {
   path: "/admin/members",
   component: () => import("../views/AdminMembersView.vue"),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
 {
     path: '/admin/members/:id',
-    component: () => import('../views/MemberDetailView.vue')
+    component: () => import('../views/MemberDetailView.vue'),
+    meta: { requiresAuth: true, role: 'Admin' }
   },
 {
   path: "/admin/scan",
   name: "scan-book",
   component: () => import("@/views/ScanBookView.vue"),
+  meta: { requiresAuth: true, role: 'Admin' }
 },
 ]
 
@@ -83,13 +93,18 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const auth = useAuthStore()
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
 
-  if (to.meta.requiresAuth && !auth.isLoggedIn) {
+  const isLoggedIn = !!token
+  const isAdmin = role === 'Admin'
+  const isMember = role === 'Member' || role === 'Student'
+
+  if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login')
-  } else if (to.meta.role === 'Admin' && !auth.isAdmin) {
+  } else if (to.meta.role === 'Admin' && !isAdmin) {
     next('/')
-  } else if (to.meta.role === 'Member' && !auth.isMember && !auth.isAdmin) {
+  } else if (to.meta.role === 'Member' && !isMember && !isAdmin) {
     next('/')
   } else {
     next()

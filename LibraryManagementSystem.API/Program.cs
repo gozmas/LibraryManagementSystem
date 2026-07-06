@@ -92,7 +92,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-Console.WriteLine("JWT KEY = " + builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -126,7 +125,6 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
 }); 
-Console.WriteLine("BOOK SERVICE REGISTERED");
 var app = builder.Build();
 app.UseMiddleware<LibraryManagementSystem.API.Middleware.ExceptionMiddleware>();
 

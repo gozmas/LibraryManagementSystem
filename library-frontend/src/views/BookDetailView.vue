@@ -201,7 +201,7 @@ const borrowBook = async () => {
     await getBook();
   } catch (error) {
     console.error(error);
-    message.value = "Borrow failed.";
+    message.value = error.response?.data?.message || "Borrow failed.";
   } finally {
     loading.value = false;
   }
