@@ -146,7 +146,45 @@ public class LoanController : ControllerBase
             "My loans retrieved successfully.",
             loans));
     }
+[Authorize(Roles = "Admin")]
+    [HttpGet("by-member/{memberId}")]
+    public async Task<IActionResult> GetLoansByMember(int memberId)
+    {
+        var loans = await _loanService.GetLoansByMemberAsync(memberId);
 
+        _logger.LogInformation(
+            "Loans for member retrieved successfully. MemberId: {MemberId}",
+            memberId);
+
+        return Ok(new ApiResponse<IEnumerable<LoanDto>>(
+            true,
+            "Member loan history retrieved successfully.",
+            loans));
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("by-book/{bookId}")]
+    public async Task<IActionResult> GetLoansByBook(int bookId)
+    {
+        var history = await _loanService.GetLoanHistoryByBookIdAsync(bookId);
+
+        if (history == null)
+        {
+            return NotFound(new ApiResponse<object>(
+                false,
+                "Book not found.",
+                null));
+        }
+
+        _logger.LogInformation(
+            "Loan history for book retrieved successfully. BookId: {BookId}",
+            bookId);
+
+        return Ok(new ApiResponse<IEnumerable<BookLoanHistoryDto>>(
+            true,
+            "Book loan history retrieved successfully.",
+            history));
+    }
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

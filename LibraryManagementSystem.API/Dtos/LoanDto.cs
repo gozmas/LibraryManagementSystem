@@ -7,6 +7,9 @@ public class LoanDto
     public int BookId { get; set; }
     public string BookTitle { get; set; } = string.Empty;
 
+    public int CopyNumber { get; set; }
+    public string CopyStatus { get; set; } = string.Empty;
+
     public int MemberId { get; set; }
     public string MemberName { get; set; } = string.Empty;
 

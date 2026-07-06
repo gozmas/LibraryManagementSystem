@@ -17,4 +17,8 @@ public interface ILoanService
         bool isAdmin);
 
     Task<IEnumerable<LoanDto>> GetMyLoansAsync(int userId);
+
+    Task<IEnumerable<LoanDto>> GetLoansByMemberAsync(int memberId);
+
+    Task<IEnumerable<BookLoanHistoryDto>?> GetLoanHistoryByBookIdAsync(int bookId);
 }

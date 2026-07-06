@@ -11,5 +11,7 @@ namespace LibraryManagementSystem.API.Services.Interfaces
         Task UpdateAsync(Book book);
         Task DeleteAsync(Book book);
         Task<PagedResultDto<BookListDto>> SearchBooksAsync(BookQueryDto query);
+        Task<bool> BackfillCopiesAsync(int bookId);
+        Task<int> BackfillAllCopiesAsync();
     }
 }

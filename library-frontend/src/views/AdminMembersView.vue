@@ -111,7 +111,11 @@
                 <td>{{ member.id }}</td>
                 <td>{{ member.userId || "-" }}</td>
 
-                <td class="actions-column">
+               <td class="actions-column">
+                  <button class="view-btn" @click="viewMember(member.id)">
+                    View
+                  </button>
+
                   <button class="edit-btn" @click="startEdit(member)">
                     Edit
                   </button>
@@ -315,6 +319,9 @@ const deleteMember = async (memberId) => {
 
 const goAdmin = () => {
   router.push("/admin");
+};
+const viewMember = (id) => {
+  router.push(`/admin/members/${id}`);
 };
 
 onMounted(getMembers);
@@ -576,6 +583,17 @@ tr:last-child td {
 .actions-column {
   text-align: right;
   white-space: nowrap;
+}
+.view-btn {
+  height: 38px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  background: #e0e7ff;
+  color: #3730a3;
+  margin-right: 8px;
 }
 
 .edit-btn,

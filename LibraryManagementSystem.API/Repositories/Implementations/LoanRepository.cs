@@ -19,6 +19,7 @@ public class LoanRepository : ILoanRepository
         return await _context.Loans
             .Include(l => l.Book)
             .Include(l => l.Member)
+            .Include(l => l.BookCopy)
             .ToListAsync();
     }
 
@@ -27,6 +28,7 @@ public class LoanRepository : ILoanRepository
         return await _context.Loans
             .Include(l => l.Book)
             .Include(l => l.Member)
+            .Include(l => l.BookCopy)
             .FirstOrDefaultAsync(l => l.Id == id);
     }
 

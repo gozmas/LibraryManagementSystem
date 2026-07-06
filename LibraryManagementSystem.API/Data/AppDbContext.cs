@@ -25,6 +25,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Loan> Loans => Set<Loan>();
+    public DbSet<BookCopy> BookCopies => Set<BookCopy>();
     public DbSet<Fine> Fines => Set<Fine>();
     public DbSet<User> Users => Set<User>();
 }

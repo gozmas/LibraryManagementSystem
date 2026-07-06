@@ -57,6 +57,41 @@
           Browse Other Books
         </button>
       </section>
+      <section v-if="role === 'Admin'" class="loan-history">
+        <h2>Loan History (All Copies)</h2>
+        <p class="loan-history-sub">Which members borrowed which copy of this book.</p>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Copy #</th>
+                <th>Borrow Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="entry in loanHistory" :key="entry.loanId">
+                <td><strong>{{ entry.memberName }}</strong></td>
+                <td>#{{ entry.copyNumber }}</td>
+                <td>{{ formatDate(entry.borrowDate) }}</td>
+                <td>{{ entry.returnDate ? formatDate(entry.returnDate) : "-" }}</td>
+                <td>
+                  <span :class="['status-badge', statusClass(entry.copyStatus, entry.isReturned)]">
+                    {{ entry.isReturned ? entry.copyStatus : "Active" }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p v-if="loanHistory.length === 0" class="empty">
+            No loan history for this book yet.
+          </p>
+        </div>
+      </section>
     </main>
 
     <main v-else class="detail-card">
@@ -80,6 +115,33 @@ const API_BASE_URL = "http://localhost:5239";
 
 const book = ref(null);
 const member = ref(null);
+const loanHistory = ref([]);
+
+const formatDate = (value) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString();
+};
+
+const getLoanHistory = async () => {
+  if (role !== "Admin") return;
+
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/api/loans/by-book/${route.params.id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    loanHistory.value = response.data.data || response.data || [];
+  } catch (error) {
+    console.error("Loan history load error:", error);
+  }
+};
+const statusClass = (copyStatus, isReturned) => {
+  if (!isReturned) return "active";
+  if (copyStatus === "Damaged") return "damaged";
+  if (copyStatus === "Lost") return "lost";
+  return "returned";
+};
+
 const message = ref("");
 const loading = ref(false);
 
@@ -152,6 +214,7 @@ const goHome = () => {
 onMounted(async () => {
   await getBook();
   await getCurrentMember();
+  await getLoanHistory();
 });
 </script>
 
@@ -297,6 +360,92 @@ onMounted(async () => {
   color: #334155;
 }
 
+.loan-history {
+  margin-top: 34px;
+  padding-top: 28px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.loan-history h2 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.loan-history-sub {
+  margin: 0 0 18px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.table-card {
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-card th,
+.table-card td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-card th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.table-card td {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.table-card tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.status-badge.active {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.returned {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.damaged {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.lost {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.empty {
+  padding: 20px;
+  color: #64748b;
+  font-weight: 700;
+}
+
 @media (max-width: 750px) {
   .hero-row {
     flex-direction: column;
@@ -313,6 +462,14 @@ onMounted(async () => {
 
   .actions {
     flex-direction: column;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  .table-card table {
+    min-width: 600px;
   }
 }
 </style>

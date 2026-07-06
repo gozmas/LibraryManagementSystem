@@ -67,6 +67,10 @@ const routes = [
   component: () => import("../views/AdminMembersView.vue"),
 },
 {
+    path: '/admin/members/:id',
+    component: () => import('../views/MemberDetailView.vue')
+  },
+{
   path: "/admin/scan",
   name: "scan-book",
   component: () => import("@/views/ScanBookView.vue"),

@@ -29,4 +29,7 @@ public class Book
 
     [JsonIgnore]
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();
+
+    [JsonIgnore]
+    public ICollection<BookCopy> Copies { get; set; } = new List<BookCopy>();
 }

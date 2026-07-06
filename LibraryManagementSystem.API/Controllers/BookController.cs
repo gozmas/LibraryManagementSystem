@@ -155,6 +155,36 @@ public class BookController : ControllerBase
                 null));
         }
     }
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{id}/backfill-copies")]
+    public async Task<IActionResult> BackfillCopies(int id)
+    {
+        var success = await _bookService.BackfillCopiesAsync(id);
+
+        if (!success)
+        {
+            return NotFound(new ApiResponse<object>(
+                false,
+                "Book not found.",
+                null));
+        }
+
+        return Ok(new ApiResponse<object>(
+            true,
+            "Book copies backfilled successfully.",
+            null));
+    }
+    [Authorize(Roles = "Admin")]
+    [HttpPost("backfill-copies-all")]
+    public async Task<IActionResult> BackfillAllCopies()
+    {
+        var count = await _bookService.BackfillAllCopiesAsync();
+
+        return Ok(new ApiResponse<object>(
+            true,
+            $"Backfill completed for {count} book(s).",
+            null));
+    }
 
     [AllowAnonymous]
     [HttpGet("search")]
