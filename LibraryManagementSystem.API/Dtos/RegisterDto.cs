@@ -1,4 +1,4 @@
-namespace LibraryManagementSystem.DTOs
+namespace LibraryManagementSystem.API.Dtos
 {
     public class RegisterDto
     {

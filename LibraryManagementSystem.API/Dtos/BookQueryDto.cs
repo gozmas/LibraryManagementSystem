@@ -1,3 +1,5 @@
+namespace LibraryManagementSystem.API.Dtos;
+
 public class BookQueryDto
 {
     public string? SearchTerm { get; set; }

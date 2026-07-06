@@ -5,11 +5,11 @@ namespace LibraryManagementSystem.API.Dtos;
 public class CreateBookDto
 {
     [Required]
-    [StringLength(200)]
+    [StringLength(100)]
     public string Title { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(20)]
+    [StringLength(13)]
     public string ISBN { get; set; } = string.Empty;
 
     [Range(1000, 2100)]

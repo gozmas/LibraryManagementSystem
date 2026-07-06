@@ -1,5 +1,5 @@
 using FluentValidation;
-using LibraryManagementSystem.DTOs;
+using LibraryManagementSystem.API.Dtos;
 
 namespace LibraryManagementSystem.API.Validators;
 
