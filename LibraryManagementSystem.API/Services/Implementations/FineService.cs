@@ -13,6 +13,8 @@ public class FineService : IFineService
     private readonly AppDbContext _context;
 
     private const decimal DailyFineAmount = 5;
+    private const decimal DamagedFineAmount = 50;
+    private const decimal LostFineAmount = 150;
 
     public FineService(
         IFineRepository fineRepository,
@@ -30,10 +32,10 @@ public class FineService : IFineService
         if (loan.ReturnDate <= loan.DueDate)
             return;
 
-        var existingFine = await _context.Fines
-            .AnyAsync(f => f.LoanId == loan.Id);
+        var existingLateFine = await _context.Fines
+            .AnyAsync(f => f.LoanId == loan.Id && f.Reason == FineReason.Late);
 
-        if (existingFine)
+        if (existingLateFine)
             return;
 
         var lateBusinessDays = CalculateBusinessDays(
@@ -47,7 +49,41 @@ public class FineService : IFineService
         {
             LoanId = loan.Id,
             Amount = lateBusinessDays * DailyFineAmount,
-            IsPaid = false
+            IsPaid = false,
+            Reason = FineReason.Late
+        };
+
+        await _fineRepository.AddAsync(fine);
+    }
+
+    public async Task CreateConditionFineIfNeededAsync(Loan loan, string condition)
+    {
+        FineReason? reason = condition switch
+        {
+            "Damaged" => FineReason.Damaged,
+            "Lost" => FineReason.Lost,
+            _ => null
+        };
+
+        if (reason == null)
+            return;
+
+        var existingConditionFine = await _context.Fines
+            .AnyAsync(f => f.LoanId == loan.Id && f.Reason == reason);
+
+        if (existingConditionFine)
+            return;
+
+        var amount = reason == FineReason.Lost
+            ? LostFineAmount
+            : DamagedFineAmount;
+
+        var fine = new Fine
+        {
+            LoanId = loan.Id,
+            Amount = amount,
+            IsPaid = false,
+            Reason = reason.Value
         };
 
         await _fineRepository.AddAsync(fine);
@@ -140,6 +176,7 @@ public class FineService : IFineService
             LoanId = fine.LoanId,
             Amount = fine.Amount,
             IsPaid = fine.IsPaid,
+            Reason = fine.Reason.ToString(),
 
             BookTitle = fine.Loan?.Book != null
                 ? fine.Loan.Book.Title

@@ -6,6 +6,7 @@ public class FineDto
     public int LoanId { get; set; }
     public decimal Amount { get; set; }
     public bool IsPaid { get; set; }
+    public string Reason { get; set; } = string.Empty;
 
     public string BookTitle { get; set; } = string.Empty;
     public string MemberName { get; set; } = string.Empty;

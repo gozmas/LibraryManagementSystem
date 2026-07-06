@@ -7,6 +7,8 @@ public interface IFineService
 {
     Task CreateFineIfNeededAsync(Loan loan);
 
+    Task CreateConditionFineIfNeededAsync(Loan loan, string condition);
+
     Task<IEnumerable<FineDto>> GetAllAsync();
 
     Task<FineDto?> GetByIdAsync(int id);

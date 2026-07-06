@@ -31,6 +31,31 @@
         <p>Please return your overdue books as soon as possible.</p>
       </div>
     </section>
+    <section
+      v-if="isMember && memberDueSoonLoans.length"
+      class="member-reminder"
+      @click="goMyLoans"
+    >
+      <span>⏰</span>
+
+      <div>
+        <strong>{{ memberDueSoonLoans.length }} book(s) due soon</strong>
+        <p>These are due within 3 days. Return them on time to avoid fines.</p>
+      </div>
+    </section>
+
+    <section
+      v-if="isMember && memberUnpaidFines.length"
+      class="member-fine-warning"
+      @click="goMyFines"
+    >
+      <span>💰</span>
+
+      <div>
+        <strong>{{ memberUnpaidFines.length }} unpaid fine(s) — {{ totalUnpaidFineAmount }}₺</strong>
+        <p>{{ fineSummaryText }}</p>
+      </div>
+    </section>
 
     <section v-if="isMember || isAdmin" class="stats">
       <template v-if="isAdmin">
@@ -271,6 +296,7 @@ const categories = ref([]);
 
 const memberLoans = ref([]);
 const adminLoans = ref([]);
+const memberFines = ref([]);
 
 const bookSearch = ref("");
 const authorSearch = ref("");
@@ -296,6 +322,43 @@ const memberActiveLoans = computed(() => {
 const memberOverdueLoans = computed(() => {
   return memberLoans.value.filter((loan) => isLoanOverdue(loan));
 });
+
+const memberDueSoonLoans = computed(() => {
+  const today = new Date();
+  const threshold = new Date();
+  threshold.setDate(today.getDate() + 3);
+
+  return memberLoans.value.filter((loan) => {
+    if (loan.isReturned || loan.returnDate) return false;
+
+    const dueDate = new Date(loan.dueDate);
+    return dueDate >= today && dueDate <= threshold;
+  });
+});
+
+const memberUnpaidFines = computed(() => {
+  return memberFines.value.filter((fine) => !fine.isPaid);
+});
+
+const totalUnpaidFineAmount = computed(() => {
+  return memberUnpaidFines.value.reduce(
+    (sum, fine) => sum + (fine.amount || 0),
+    0
+  );
+});
+
+const fineSummaryText = computed(() => {
+  const reasons = memberUnpaidFines.value.map((fine) => fine.reason);
+
+  const parts = [];
+  if (reasons.includes("Late")) parts.push("late returns");
+  if (reasons.includes("Damaged")) parts.push("damaged books");
+  if (reasons.includes("Lost")) parts.push("lost books");
+
+  if (parts.length === 0) return "You have unpaid fines.";
+
+  return `You have unpaid fines for: ${parts.join(", ")}.`;
+}); 
 
 const adminActiveLoans = computed(() => {
   return adminLoans.value.filter((loan) => !loan.isReturned && !loan.returnDate);
@@ -424,6 +487,18 @@ const getData = async () => {
         memberLoans.value = [];
       }
     }
+    try {
+        const fineRes = await axios.get(`${API_BASE_URL}/api/fines/my`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        memberFines.value = normalize(fineRes);
+      } catch (error) {
+        console.error("Member fines could not be loaded:", error);
+        memberFines.value = [];
+      }
 
     if (token && isAdmin.value) {
       try {
@@ -458,6 +533,9 @@ const goCategoryDetail = (id) => {
 
 const goMyLoans = () => {
   router.push("/my-loans");
+};
+const goMyFines = () => {
+  router.push("/my-fines");
 };
 
 const goAdminLoans = () => {
@@ -512,6 +590,69 @@ onMounted(getData);
 
 .admin-warning p,
 .member-warning p {
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+.member-reminder {
+  padding: 20px 24px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: #fef3c7;
+  color: #92400e;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.member-reminder:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
+}
+
+.member-reminder span {
+  font-size: 32px;
+}
+
+.member-reminder strong {
+  font-size: 18px;
+}
+
+.member-reminder p {
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+
+.member-fine-warning {
+  padding: 20px 24px;
+  margin-bottom: 22px;
+  border-radius: 22px;
+  background: #ede9fe;
+  color: #5b21b6;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.member-fine-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
+}
+
+.member-fine-warning span {
+  font-size: 32px;
+}
+
+.member-fine-warning strong {
+  font-size: 18px;
+}
+
+.member-fine-warning p {
   margin: 4px 0 0;
   font-weight: 700;
 }

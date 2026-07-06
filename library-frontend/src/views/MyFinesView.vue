@@ -36,37 +36,37 @@
           </div>
 
           <div v-if="unpaidFines.length" class="fine-grid">
-            <Card v-for="fine in unpaidFines" :key="fine.id" class="fine-card">
-              <CardHeader class="card-header">
+            <article v-for="fine in unpaidFines" :key="fine.id" class="fine-card">
+              <div class="fine-card-top">
                 <div>
-                  <CardTitle class="book-title">
-                    {{ fine.bookTitle || "Library Fine" }}
-                  </CardTitle>
-
-                  <CardDescription>
-                    Fine ID: {{ fine.id }} • Loan ID: {{ fine.loanId }}
-                  </CardDescription>
+                  <h2>{{ fine.bookTitle || "Library Fine" }}</h2>
+                  <p>Fine ID: {{ fine.id }} • Loan ID: {{ fine.loanId }}</p>
                 </div>
 
-                <Badge variant="destructive">Unpaid</Badge>
-              </CardHeader>
+                <span class="status-badge unpaid">Unpaid</span>
+              </div>
 
-              <CardContent class="fine-info">
-                <div class="info-row">
+              <div class="fine-details">
+                <div class="detail-row">
+                  <span>Reason</span>
+                  <strong :class="reasonClass(fine.reason)">{{ reasonLabel(fine.reason) }}</strong>
+                </div>
+
+                <div class="detail-row">
                   <span>Amount</span>
                   <strong>{{ formatMoney(fine.amount) }}</strong>
                 </div>
 
-                <div class="info-row">
+                <div class="detail-row">
                   <span>Status</span>
                   <strong class="unpaid-text">Unpaid</strong>
                 </div>
+              </div>
 
-                <Button class="pay-btn" @click="payFine(fine.id)">
-                  Pay Fine
-                </Button>
-              </CardContent>
-            </Card>
+              <button class="pay-btn" @click="payFine(fine.id)">
+                Pay Fine
+              </button>
+            </article>
           </div>
 
           <div v-else class="no-debt-card">
@@ -87,34 +87,34 @@
             </div>
           </div>
 
-          <div class="history-grid">
-            <Card v-for="fine in paidFines" :key="fine.id" class="history-card">
-              <CardHeader class="card-header">
+          <div class="fine-grid">
+            <article v-for="fine in paidFines" :key="fine.id" class="fine-card">
+              <div class="fine-card-top">
                 <div>
-                  <CardTitle class="book-title">
-                    {{ fine.bookTitle || "Library Fine" }}
-                  </CardTitle>
-
-                  <CardDescription>
-                    Fine ID: {{ fine.id }} • Loan ID: {{ fine.loanId }}
-                  </CardDescription>
+                  <h2>{{ fine.bookTitle || "Library Fine" }}</h2>
+                  <p>Fine ID: {{ fine.id }} • Loan ID: {{ fine.loanId }}</p>
                 </div>
 
-                <Badge variant="secondary">Paid</Badge>
-              </CardHeader>
+                <span class="status-badge paid">Paid</span>
+              </div>
 
-              <CardContent class="fine-info">
-                <div class="info-row">
+              <div class="fine-details">
+                <div class="detail-row">
+                  <span>Reason</span>
+                  <strong :class="reasonClass(fine.reason)">{{ reasonLabel(fine.reason) }}</strong>
+                </div>
+
+                <div class="detail-row">
                   <span>Amount</span>
                   <strong>{{ formatMoney(fine.amount) }}</strong>
                 </div>
 
-                <div class="info-row">
+                <div class="detail-row">
                   <span>Status</span>
                   <strong class="paid-text">Paid</strong>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </article>
           </div>
         </section>
       </template>
@@ -127,16 +127,6 @@ import { computed, onMounted, ref } from "vue";
 import axios from "axios";
 
 import AppTopbar from "@/components/AppTopbar.vue";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 const API_BASE_URL = "http://localhost:5239";
 
@@ -218,6 +208,18 @@ const formatMoney = (amount) => {
   })} ₺`;
 };
 
+const reasonLabel = (reason) => {
+  if (reason === "Damaged") return "Damaged Book";
+  if (reason === "Lost") return "Lost Book";
+  return "Late Return";
+};
+
+const reasonClass = (reason) => {
+  if (reason === "Damaged") return "reason-damaged";
+  if (reason === "Lost") return "reason-lost";
+  return "reason-late";
+};
+
 onMounted(getFines);
 </script>
 
@@ -243,19 +245,19 @@ onMounted(getFines);
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 28px;
-  padding: 28px 32px;
+  padding: 30px 34px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #e2e8f0;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #16a34a;
+  color: #64748b;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 900;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -267,9 +269,10 @@ onMounted(getFines);
 }
 
 .header-card p {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: #64748b;
   font-size: 16px;
+  font-weight: 600;
 }
 
 .summary-wrapper {
@@ -281,38 +284,38 @@ onMounted(getFines);
   min-width: 130px;
   padding: 18px 20px;
   border-radius: 22px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   text-align: center;
 }
 
 .amount-box {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
+  background: #fff7ed;
+  border-color: #fed7aa;
 }
 
 .summary-number {
   display: block;
-  color: #c2410c;
-  font-size: 28px;
-  font-weight: 900;
+  color: #15803d;
+  font-size: 34px;
+  font-weight: 950;
 }
 
 .amount-box .summary-number {
-  color: #15803d;
-  font-size: 24px;
+  color: #c2410c;
+  font-size: 26px;
 }
 
 .summary-label {
   display: block;
   margin-top: 4px;
-  color: #9a3412;
+  color: #166534;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .amount-box .summary-label {
-  color: #166534;
+  color: #9a3412;
 }
 
 .section {
@@ -324,6 +327,7 @@ onMounted(getFines);
   align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 16px;
+  padding-left: 24px;
 }
 
 .section-header h2 {
@@ -340,70 +344,100 @@ onMounted(getFines);
   font-weight: 600;
 }
 
-.fine-grid,
-.history-grid {
+.fine-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 480px));
+  gap: 22px;
 }
 
-.fine-card,
-.history-card {
-  height: 100%;
-  border-radius: 22px;
-  border: 1px solid #e2e8f0;
+.fine-card {
+  padding: 24px;
+  border-radius: 26px;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.07);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
   transition:
     transform 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.fine-card:hover,
-.history-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.11);
+.fine-card:hover {
+  transform: translateY(-4px);
+  border-color: #cbd5e1;
+  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.12);
 }
 
-.card-header {
+.fine-card-top {
   display: flex;
-  flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 
-.book-title {
+.fine-card-top h2 {
+  margin: 0;
   color: #0f172a;
-  font-size: 20px;
+  font-size: 23px;
   line-height: 1.25;
+  letter-spacing: -0.03em;
 }
 
-.fine-info {
+.fine-card-top p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.status-badge.unpaid {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.status-badge.paid {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.fine-details {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.info-row {
+.detail-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 14px;
-  border-radius: 14px;
+  gap: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
   background: #f8fafc;
+}
+
+.detail-row span {
   color: #475569;
-}
-
-.info-row span {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
-.info-row strong {
+.detail-row strong {
   color: #0f172a;
   font-size: 14px;
+  font-weight: 900;
   text-align: right;
 }
 
@@ -415,11 +449,28 @@ onMounted(getFines);
   color: #15803d !important;
 }
 
+.reason-late {
+  color: #b45309 !important;
+}
+
+.reason-damaged {
+  color: #b91c1c !important;
+}
+
+.reason-lost {
+  color: #6b21a8 !important;
+}
+
 .pay-btn {
   width: 100%;
-  margin-top: 6px;
-  border-radius: 14px;
-  font-weight: 800;
+  height: 48px;
+  margin-top: 18px;
+  border: none;
+  border-radius: 16px;
+  background: #111;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
   cursor: pointer;
 }
 
@@ -484,8 +535,7 @@ onMounted(getFines);
     flex: 1;
   }
 
-  .fine-grid,
-  .history-grid {
+  .fine-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -495,12 +545,28 @@ onMounted(getFines);
     padding: 16px;
   }
 
+  .header-card {
+    padding: 24px;
+  }
+
   .summary-wrapper {
     flex-direction: column;
   }
 
   .summary-box {
     width: 100%;
+  }
+
+  .fine-card {
+    padding: 20px;
+  }
+
+  .fine-card-top {
+    flex-direction: column;
+  }
+
+  .status-badge {
+    align-self: flex-start;
   }
 }
 </style>
