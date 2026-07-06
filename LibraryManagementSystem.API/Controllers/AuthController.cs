@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.RateLimiting;
 using LibraryManagementSystem.API.Responses;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Data;
-using LibraryManagementSystem.DTOs;
+using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -29,9 +30,9 @@ namespace LibraryManagementSystem.API.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
                 return BadRequest(new ApiResponse<object>(false, "Email already exists.", null));
 
             var user = new User
@@ -52,7 +53,7 @@ namespace LibraryManagementSystem.API.Controllers
 
             _context.Users.Add(user);
             _context.Members.Add(member);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(new ApiResponse<object>(true, "User registered successfully.", new
             {
@@ -65,11 +66,11 @@ namespace LibraryManagementSystem.API.Controllers
         }
 [EnableRateLimiting("login")]
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
-       
+        public async Task<IActionResult> Login(LoginDto dto)
+
         {
-            var user = _context.Users
-                .FirstOrDefault(u => u.Email == dto.Email);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 return Unauthorized(new ApiResponse<object>(false, "Invalid email or password.", null));
@@ -97,7 +98,7 @@ namespace LibraryManagementSystem.API.Controllers
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(2),
+                expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds);
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);

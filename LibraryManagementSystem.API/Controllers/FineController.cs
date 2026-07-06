@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using LibraryManagementSystem.API.Dtos;
+using LibraryManagementSystem.API.Extensions;
 using LibraryManagementSystem.API.Responses;
 using LibraryManagementSystem.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -64,7 +64,7 @@ public class FineController : ControllerBase
     [HttpGet("my")]
     public async Task<IActionResult> GetMyFines()
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetUserId();
 
         if (userId == null)
         {
@@ -90,7 +90,7 @@ public class FineController : ControllerBase
     [HttpPut("{id}/pay")]
     public async Task<IActionResult> PayFine(int id)
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetUserId();
 
         if (userId == null)
         {
@@ -102,18 +102,19 @@ public class FineController : ControllerBase
 
         var isAdmin = User.IsInRole("Admin");
 
-        var success = await _fineService.PayFineAsync(id, userId.Value, isAdmin);
+        var result = await _fineService.PayFineAsync(id, userId.Value, isAdmin);
 
-        if (!success)
+        if (!result.Success)
         {
             _logger.LogWarning(
-                "Fine payment failed. FineId: {FineId}, UserId: {UserId}",
+                "Fine payment failed. FineId: {FineId}, UserId: {UserId}, Reason: {Reason}",
                 id,
-                userId.Value);
+                userId.Value,
+                result.ErrorMessage);
 
-            return BadRequest(new ApiResponse<object>(
+            return StatusCode(result.StatusCode, new ApiResponse<object>(
                 false,
-                "Fine not found, already paid, or you are not allowed to pay this fine.",
+                result.ErrorMessage ?? "Fine could not be paid.",
                 null));
         }
 
@@ -128,20 +129,4 @@ public class FineController : ControllerBase
             null));
     }
 
-    private int? GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrWhiteSpace(userIdClaim))
-        {
-            return null;
-        }
-
-        if (!int.TryParse(userIdClaim, out var userId))
-        {
-            return null;
-        }
-
-        return userId;
-    }
 }

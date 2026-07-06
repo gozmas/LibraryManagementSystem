@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
+using LibraryManagementSystem.API.Extensions;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Services.Interfaces;
 using LibraryManagementSystem.Models;
@@ -50,7 +50,7 @@ public class MemberController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMyMemberProfile()
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetUserId();
 
         if (userId == null)
             return Unauthorized();
@@ -77,7 +77,7 @@ public class MemberController : ControllerBase
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMyProfile(UpdateMyProfileDto dto)
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetUserId();
 
         if (userId == null)
             return Unauthorized();
@@ -135,7 +135,7 @@ public class MemberController : ControllerBase
     [HttpPut("me/change-password")]
     public async Task<IActionResult> ChangeMyPassword(ChangePasswordDto dto)
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetUserId();
 
         if (userId == null)
             return Unauthorized();
@@ -200,13 +200,4 @@ public class MemberController : ControllerBase
         return NoContent();
     }
 
-    private int? GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim))
-            return null;
-
-        return int.Parse(userIdClaim);
-    }
 }
