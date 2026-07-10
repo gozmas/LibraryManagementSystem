@@ -135,6 +135,8 @@
       </template>
     </section>
 
+    <LiveActivityWidget v-if="isMember || isAdmin" />
+
     <section class="columns">
       <motion.div
         class="panel"
@@ -272,6 +274,7 @@ import AuthorCard from "@/components/AuthorCard.vue";
 import CategoryCard from "@/components/CategoryCard.vue";
 import SearchInput from "@/components/SearchInput.vue";
 import StatCard from "@/components/StatCard.vue";
+import LiveActivityWidget from "@/components/LiveActivityWidget.vue";
 
 const router = useRouter();
 

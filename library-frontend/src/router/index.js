@@ -54,7 +54,8 @@ const routes = [
   component: () => import("../views/ReportsView.vue"),
   meta: { requiresAuth: true, role: 'Admin' }
 },
-  {
+
+{
   path: '/admin',
   component: () => import('../views/AdminView.vue'),
   meta: { requiresAuth: true, role: 'Admin' }

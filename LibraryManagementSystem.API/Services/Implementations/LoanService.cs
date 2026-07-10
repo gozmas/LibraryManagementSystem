@@ -1,9 +1,11 @@
 using LibraryManagementSystem.API.Common;
 using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
+using LibraryManagementSystem.API.Hubs;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Repositories.Interfaces;
 using LibraryManagementSystem.API.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagementSystem.API.Services.Implementations;
@@ -14,17 +16,37 @@ public class LoanService : ILoanService
     private readonly IBookRepository _bookRepository;
     private readonly IFineService _fineService;
     private readonly AppDbContext _context;
+    private readonly IHubContext<LoanHub> _hubContext;
 
     public LoanService(
         ILoanRepository loanRepository,
         IBookRepository bookRepository,
         IFineService fineService,
-        AppDbContext context)
+        AppDbContext context,
+        IHubContext<LoanHub> hubContext)
     {
         _loanRepository = loanRepository;
         _bookRepository = bookRepository;
         _fineService = fineService;
         _context = context;
+        _hubContext = hubContext;
+    }
+
+    // Kitap durumu (Available/Total copies) her değiştiğinde bağlı olan
+    // Live Activity ekranlarına anlık olarak yayınlanıyor. Metod private
+    // tutuluyor çünkü sadece bu servis içindeki borrow/return akışlarından
+    // tetiklenmesi gerekiyor.
+    private Task BroadcastBookStatusChangedAsync(Book book, string action)
+    {
+        return _hubContext.Clients.All.SendAsync("BookStatusChanged", new
+        {
+            bookId = book.Id,
+            bookTitle = book.Title,
+            totalCopies = book.TotalCopies,
+            availableCopies = book.AvailableCopies,
+            action,
+            timestamp = DateTime.UtcNow
+        });
     }
 
     public async Task<IEnumerable<LoanDto>> GetAllAsync()
@@ -111,6 +133,8 @@ public class LoanService : ILoanService
             throw;
         }
 
+        await BroadcastBookStatusChangedAsync(book, "Borrowed");
+
         var createdLoan = await _loanRepository.GetByIdAsync(loan.Id);
 
         if (createdLoan == null)
@@ -189,6 +213,11 @@ public class LoanService : ILoanService
         {
             await transaction.RollbackAsync();
             throw;
+        }
+
+        if (loan.Book != null)
+        {
+            await BroadcastBookStatusChangedAsync(loan.Book, "Returned");
         }
 
         return ServiceResult<LoanDto>.Ok(MapToLoanDto(loan));

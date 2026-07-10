@@ -18,6 +18,7 @@ using LibraryManagementSystem.API.Repositories.Interfaces;
 using LibraryManagementSystem.API.Repositories.Implementations;
 using LibraryManagementSystem.API.Services.Interfaces;
 using LibraryManagementSystem.API.Services.Implementations;
+using LibraryManagementSystem.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -27,7 +28,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 builder.Services.AddRateLimiter(options =>
@@ -107,6 +109,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
+
+        // SignalR/WebSocket bağlantılarında tarayıcı Authorization header'ı
+        // gönderemiyor, bu yüzden token'ı query string üzerinden ("access_token")
+        // okuyup normal JWT doğrulama akışına dahil ediyoruz. Sadece /hubs
+        // path'i için geçerli, diğer endpoint'leri etkilemez.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -125,6 +148,7 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfile>();
 }); 
+builder.Services.AddSignalR();
 var app = builder.Build();
 app.UseMiddleware<LibraryManagementSystem.API.Middleware.ExceptionMiddleware>();
 
@@ -150,6 +174,7 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast");
 
 app.MapControllers();
+app.MapHub<LoanHub>("/hubs/loan");
 
 // Admin seed
 using (var scope = app.Services.CreateScope())
@@ -173,4 +198,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
