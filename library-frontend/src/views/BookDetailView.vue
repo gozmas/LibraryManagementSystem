@@ -39,7 +39,9 @@
         <DetailInfoBox title="Category" :value="book.categoryName || 'No category'" />
         <DetailInfoBox title="ISBN" :value="book.isbn || '-'" />
         <DetailInfoBox title="Publication Year" :value="book.publicationYear || '-'" />
-        <DetailInfoBox title="Available Copies" :value="`${book.availableCopies ?? 0} / ${book.totalCopies ?? 1}`" />
+         <DetailInfoBox title="Total Copies" :value="`${book.totalCopies ?? 1}`" />
+        <DetailInfoBox title="Available Copies" :value="`${book.availableCopies ?? 0}`" />
+        
       </section>
 
       <p v-if="message" class="message">{{ message }}</p>
