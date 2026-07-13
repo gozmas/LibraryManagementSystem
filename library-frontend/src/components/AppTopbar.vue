@@ -34,6 +34,11 @@
           My Loans
         </button>
 
+        <button class="nav-btn" @click="goMyWishlist">
+          <span>❤️</span>
+          My Wishlist
+        </button>
+
         <button class="nav-btn" @click="goMyFines">
           <span>💰</span>
           My Fines
@@ -62,12 +67,32 @@
         </button>
       </template>
     </nav>
+
+    <div v-if="toasts.length" class="toast-stack">
+      <div v-for="toast in toasts" :key="toast.id" class="toast">
+        <span class="toast-icon">📗</span>
+
+        <div class="toast-body">
+          <p class="toast-title">{{ toast.bookTitle }} is available!</p>
+          <p class="toast-sub">A copy just came back — grab it before it's gone.</p>
+        </div>
+
+        <button class="toast-action" @click="goToWishlistFromToast(toast.id)">
+          View
+        </button>
+
+        <button class="toast-close" @click="dismissToast(toast.id)">
+          ✕
+        </button>
+      </div>
+    </div>
   </header>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import * as signalR from "@microsoft/signalr";
 
 const router = useRouter();
 
@@ -80,6 +105,7 @@ const goHome = () => router.push("/home");
 const goLogin = () => router.push("/login");
 const goRegister = () => router.push("/register");
 const goMyLoans = () => router.push("/my-loans");
+const goMyWishlist = () => router.push("/my-wishlist");
 const goMyFines = () => router.push("/my-fines");
 const goProfile = () => router.push("/profile");
 const goReports = () => router.push("/reports");
@@ -93,6 +119,61 @@ const logout = () => {
 
   router.push("/login");
 };
+
+// ---------- Wishlist canlı bildirimleri ----------
+// Sadece member/student için, sayfa açıkken bu hub bağlantısı kuruluyor.
+// Backend, bir kitap tekrar müsait olduğunda LoanService.ReturnBookAsync
+// içinden Clients.User(...) ile sadece o kitabı wishlist'inde bulunduran
+// kullanıcıya "WishlistBookAvailable" event'i gönderiyor.
+const API_BASE_URL = "http://localhost:5239";
+const toasts = ref([]);
+let toastCounter = 0;
+let connection = null;
+
+const dismissToast = (id) => {
+  toasts.value = toasts.value.filter((toast) => toast.id !== id);
+};
+
+const goToWishlistFromToast = (id) => {
+  dismissToast(id);
+  router.push("/my-wishlist");
+};
+
+const startWishlistNotifications = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token || !isMember.value) return;
+
+  connection = new signalR.HubConnectionBuilder()
+    .withUrl(`${API_BASE_URL}/hubs/loan`, {
+      accessTokenFactory: () => token,
+    })
+    .withAutomaticReconnect()
+    .build();
+
+  connection.on("WishlistBookAvailable", (data) => {
+    toastCounter += 1;
+    const id = toastCounter;
+
+    toasts.value.push({ id, bookTitle: data.bookTitle });
+
+    setTimeout(() => dismissToast(id), 8000);
+  });
+
+  try {
+    await connection.start();
+  } catch (error) {
+    console.error("Wishlist notification connection failed:", error);
+  }
+};
+
+onMounted(startWishlistNotifications);
+
+onBeforeUnmount(() => {
+  if (connection) {
+    connection.stop();
+  }
+});
 </script>
 
 <style scoped>
@@ -206,6 +287,100 @@ button {
 
   nav {
     justify-content: flex-start;
+  }
+}
+
+/* ---------- Wishlist toast bildirimleri ---------- */
+
+.toast-stack {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+  animation: toast-in 0.25s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast-icon {
+  font-size: 20px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.toast-sub {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: #166534;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+@media (max-width: 480px) {
+  .toast-stack {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+    max-width: none;
   }
 }
 </style>

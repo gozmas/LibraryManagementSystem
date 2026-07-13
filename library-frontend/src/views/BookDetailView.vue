@@ -39,20 +39,39 @@
         <DetailInfoBox title="Category" :value="book.categoryName || 'No category'" />
         <DetailInfoBox title="ISBN" :value="book.isbn || '-'" />
         <DetailInfoBox title="Publication Year" :value="book.publicationYear || '-'" />
-         <DetailInfoBox title="Total Copies" :value="`${book.totalCopies ?? 1}`" />
+        <DetailInfoBox title="Total Copies" :value="`${book.totalCopies ?? 1}`" />
         <DetailInfoBox title="Available Copies" :value="`${book.availableCopies ?? 0}`" />
-        
       </section>
 
       <p v-if="message" class="message">{{ message }}</p>
 
       <section class="actions">
         <button
+          v-if="role === 'Member'"
           class="borrow-btn"
           :disabled="!book.isAvailable || loading"
           @click="borrowBook"
         >
           {{ loading ? "Processing..." : book.isAvailable ? "Borrow Book" : "Currently Borrowed" }}
+        </button>
+
+        <button
+          v-if="role === 'Member'"
+          class="wishlist-btn"
+          :class="{ active: isWishlisted }"
+          :disabled="wishlistLoading"
+          @click="toggleWishlist"
+        >
+          <Heart :size="18" :fill="isWishlisted ? 'currentColor' : 'none'" />
+          {{ isWishlisted ? "In Your Wishlist" : "Add to Wishlist" }}
+        </button>
+
+        <button
+          v-if="role === 'Admin'"
+          class="borrow-btn"
+          @click="goIssueLoan"
+        >
+          Issue a Loan for This Book
         </button>
 
         <button class="secondary-btn" @click="goHome">
@@ -106,6 +125,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
+import { Heart } from "@lucide/vue";
 
 import DetailHero from "@/components/DetailHero.vue";
 import DetailInfoBox from "@/components/DetailInfoBox.vue";
@@ -118,6 +138,8 @@ const API_BASE_URL = "http://localhost:5239";
 const book = ref(null);
 const member = ref(null);
 const loanHistory = ref([]);
+const isWishlisted = ref(false);
+const wishlistLoading = ref(false);
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -167,6 +189,54 @@ const getCurrentMember = async () => {
   member.value = response.data.data || response.data;
 };
 
+// Wishlist durumu ayrı bir "check" endpoint'i yerine, mevcut wishlist
+// listesi çekilip bu kitabın id'si içinde mi diye bakılarak belirleniyor.
+const getWishlistStatus = async () => {
+  if (!token || role !== "Member") return;
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/wishlist/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const items = response.data.data || response.data || [];
+    isWishlisted.value = items.some(
+      (item) => item.bookId === Number(route.params.id)
+    );
+  } catch (error) {
+    console.error("Wishlist status load error:", error);
+  }
+};
+
+const toggleWishlist = async () => {
+  if (!token || role !== "Member") {
+    message.value = "Please login as a member to use your wishlist.";
+    return;
+  }
+
+  wishlistLoading.value = true;
+
+  try {
+    if (isWishlisted.value) {
+      await axios.delete(`${API_BASE_URL}/api/wishlist/${route.params.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      isWishlisted.value = false;
+    } else {
+      await axios.post(
+        `${API_BASE_URL}/api/wishlist`,
+        { bookId: Number(route.params.id) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      isWishlisted.value = true;
+    }
+  } catch (error) {
+    console.error("Wishlist toggle failed:", error);
+    message.value = error.response?.data?.message || "Wishlist could not be updated.";
+  } finally {
+    wishlistLoading.value = false;
+  }
+};
+
 const borrowBook = async () => {
   if (!token) {
     message.value = "Please login to borrow books.";
@@ -213,10 +283,15 @@ const goHome = () => {
   router.push("/home");
 };
 
+const goIssueLoan = () => {
+  router.push(`/admin/loans?bookId=${route.params.id}`);
+};
+
 onMounted(async () => {
   await getBook();
   await getCurrentMember();
   await getLoanHistory();
+  await getWishlistStatus();
 });
 </script>
 
@@ -337,7 +412,8 @@ onMounted(async () => {
 }
 
 .borrow-btn,
-.secondary-btn {
+.secondary-btn,
+.wishlist-btn {
   height: 58px;
   padding: 0 22px;
   border: none;
@@ -360,6 +436,25 @@ onMounted(async () => {
 .secondary-btn {
   background: #f1f5f9;
   color: #334155;
+}
+
+.wishlist-btn {
+  background: white;
+  color: #166534;
+  border: 1.5px solid #166534;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.wishlist-btn.active {
+  background: #166534;
+  color: white;
+}
+
+.wishlist-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .loan-history {

@@ -40,6 +40,11 @@ const routes = [
   meta: { requiresAuth: true }
 },
 {
+  path: "/my-wishlist",
+  component: () => import("../views/MyWishlistView.vue"),
+  meta: { requiresAuth: true }
+},
+{
   path: "/profile",
   component: () => import("../views/ProfileView.vue"),
   meta: { requiresAuth: true }
@@ -54,7 +59,6 @@ const routes = [
   component: () => import("../views/ReportsView.vue"),
   meta: { requiresAuth: true, role: 'Admin' }
 },
-
 {
   path: '/admin',
   component: () => import('../views/AdminView.vue'),

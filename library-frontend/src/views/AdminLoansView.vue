@@ -216,11 +216,12 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 
 import AppTopbar from "@/components/AppTopbar.vue";
 
+const route = useRoute();
 const router = useRouter();
 const API_BASE_URL = "http://localhost:5239";
 
@@ -423,10 +424,18 @@ const goAdmin = () => {
   router.push("/admin");
 };
 
-onMounted(() => {
+onMounted(async () => {
   getLoans();
   getMembers();
-  getBooks();
+  await getBooks();
+
+  // BookDetailView'daki "Issue a Loan" linkinden gelindiyse, kitap
+  // önceden seçili gelsin diye query param'dan okuyoruz.
+  const bookIdFromQuery = Number(route.query.bookId);
+
+  if (bookIdFromQuery && books.value.some((book) => book.id === bookIdFromQuery)) {
+    issueForm.bookId = bookIdFromQuery;
+  }
 });
 </script>
 
