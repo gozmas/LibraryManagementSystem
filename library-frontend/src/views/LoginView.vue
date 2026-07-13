@@ -27,82 +27,31 @@
         </button>
       </nav>
     </header>
-
     <main class="layout">
-      <motion.section
-        class="left-panel"
-        :initial="{ opacity: 0, x: -30 }"
+      <div class="layout-row">  
+      <motion.aside
+        class="side-panel"
+
+
+        :initial="{ opacity: 0, x: -16 }"
         :animate="{ opacity: 1, x: 0 }"
-        :transition="{ duration: 0.5 }"
+        :transition="{ duration: 0.4 }"
       >
-        <div class="intro">
-          <p class="eyebrow">Welcome to</p>
-          <h1>LibraryMS</h1>
-          <p class="desc">
-            The catalogue, the members and every loan &mdash; kept in one
-            calm, well-organized place.
-          </p>
+       <BookOpen :size="38" />
+        <p class="side-panel-title">For members &amp; guests</p>
+        <ul class="side-panel-list">
+          <li>Browse and search the catalogue</li>
+          <li>Track your active loans</li>
+          <li>Save books to your wishlist</li>
+        </ul>
+      </motion.aside>
 
-          <ul class="features">
-            <motion.li
-              v-for="(feature, index) in features"
-              :key="feature.title"
-              :initial="{ opacity: 0, y: 10 }"
-              :animate="{ opacity: 1, y: 0 }"
-              :transition="{ duration: 0.35, delay: 0.15 + index * 0.08 }"
-            >
-              <span class="feature-icon">
-                <component :is="feature.icon" :size="20" />
-              </span>
-              <span class="feature-text">
-                <strong>{{ feature.title }}</strong>
-                <span>{{ feature.desc }}</span>
-              </span>
-            </motion.li>
-          </ul>
-
-          <div v-if="featuredBooks.length" class="featured">
-            <p class="featured-label">From our shelves</p>
-
-            <div class="featured-scroll">
-              <button
-                v-for="book in featuredBooks"
-                :key="book.id"
-                type="button"
-                class="featured-card"
-                @click="goToBook(book.id)"
-              >
-                <div class="featured-cover">
-                  <img
-                    v-if="book.coverUrl"
-                    :src="book.coverUrl"
-                    :alt="book.title"
-                  />
-                  <BookOpen v-else :size="22" />
-                </div>
-
-                <p class="featured-title">{{ book.title }}</p>
-                <p class="featured-author">{{ book.authorName || "Unknown" }}</p>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="spines" aria-hidden="true">
-          <span
-            v-for="n in 7"
-            :key="n"
-            :class="`spine spine-${n}`"
-          ></span>
-        </div>
-      </motion.section>
-
-      <section class="right-panel">
+      <div class="center-column">
         <motion.div
           class="login-card"
           :initial="{ opacity: 0, y: 24 }"
           :animate="{ opacity: 1, y: 0 }"
-          :transition="{ duration: 0.5, delay: 0.15 }"
+          :transition="{ duration: 0.5 }"
         >
           <div class="card-brand">
             <div class="logo">
@@ -182,19 +131,35 @@
               Continue as guest
             </motion.button>
 
-            <p class="signup">
+           <p class="signup">
               Don't have an account?
               <button type="button" @click="goSignUp">Sign up</button>
             </p>
           </form>
         </motion.div>
-      </section>
+      </div>
+
+      <motion.aside
+        class="side-panel"
+        :initial="{ opacity: 0, x: 16 }"
+        :animate="{ opacity: 1, x: 0 }"
+        :transition="{ duration: 0.4 }"
+      >
+      <ShieldCheck :size="38" />
+        <p class="side-panel-title">For administrators</p>
+        <ul class="side-panel-list">
+          <li>Manage members and their accounts</li>
+          <li>Issue and track every loan</li>
+          <li>View reports and analytics</li>
+        </ul>
+      </motion.aside>
+      </div>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { motion } from "motion-v";
@@ -208,9 +173,7 @@ import {
   EyeOff,
   UserRound,
   BookOpen,
-  Users,
-  CalendarCheck,
-  ChartColumn,
+  ShieldCheck,
 } from "@lucide/vue";
 
 const router = useRouter();
@@ -221,73 +184,12 @@ const showPassword = ref(false);
 const loading = ref(false);
 const errorMessage = ref("");
 const isDarkMode = ref(false);
-const featuredBooks = ref([]);
 
 const API_BASE_URL = "http://localhost:5239";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const isEmailValid = computed(() => emailPattern.test(email.value));
-
-const features = [
-  { title: "Browse Books", desc: "Discover and search thousands of books.", icon: BookOpen },
-  { title: "Manage Members", desc: "Add and manage library members easily.", icon: Users },
-  { title: "Track Loans", desc: "Borrow, return and renew books effortlessly.", icon: CalendarCheck },
-  { title: "Reports & Analytics", desc: "Get insights and reports about your library.", icon: ChartColumn },
-];
-
-// Fisher-Yates: dizinin kendisini değiştirmeden rastgele bir örneklem alır.
-const pickRandom = (list, count) => {
-  const copy = [...list];
-
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-
-  return copy.slice(0, count);
-};
-
-// Kategori başına bir kitap seçer (o kategorideki kitap da rastgele
-// belirlenir), ardından kategorilerin gösterim sırasını karıştırıp
-// en fazla maxCount tanesini döner. Böylece şerit tek bir kategoriye
-// yığılmak yerine katalogdaki çeşitliliği yansıtır.
-const pickOnePerCategory = (list, maxCount) => {
-  const byCategory = new Map();
-
-  for (const book of list) {
-    const key = book.categoryId ?? book.categoryName ?? "uncategorized";
-
-    if (!byCategory.has(key)) {
-      byCategory.set(key, []);
-    }
-
-    byCategory.get(key).push(book);
-  }
-
-  const onePerCategory = [...byCategory.values()].map(
-    (booksInCategory) => pickRandom(booksInCategory, 1)[0]
-  );
-
-  return pickRandom(onePerCategory, maxCount);
-};
-
-// Login sayfası herkese açık olduğu için auth gerektirmeyen /api/books
-// endpoint'ini kullanıyoruz; katalogdan rastgele birkaç kitap seçip
-// "From our shelves" şeridinde gösteriyoruz.
-const loadFeaturedBooks = async () => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/books`);
-    const books = response.data.data || response.data || [];
-    featuredBooks.value = pickOnePerCategory(books, 8);
-  } catch (error) {
-    console.error("Featured books load failed:", error);
-  }
-};
-
-const goToBook = (id) => {
-  router.push(`/books/${id}`);
-};
 
 const handleLogin = async () => {
   errorMessage.value = "";
@@ -364,7 +266,7 @@ const setDarkMode = () => {
   isDarkMode.value = true;
 };
 
-onMounted(loadFeaturedBooks);
+
 </script>
 
 <style scoped>
@@ -375,7 +277,10 @@ onMounted(loadFeaturedBooks);
 .login-page {
   min-height: 100vh;
   padding: 24px;
-  background: #f8faf7;
+  background:
+    radial-gradient(circle at 10% 15%, #eef9e8 0%, transparent 28%),
+    radial-gradient(circle at 95% 95%, #f8eaf8 0%, transparent 24%),
+    #f8faf7;
   font-family: Inter, system-ui, sans-serif;
   color: #0f172a;
 }
@@ -445,214 +350,106 @@ onMounted(loadFeaturedBooks);
 
 .layout {
   min-height: calc(100vh - 118px);
-  border-radius: 22px;
-  background: white;
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.left-panel {
-  position: relative;
-  padding: 64px 64px 0;
-  background: linear-gradient(160deg, #eef6e9 0%, #ffffff 65%);
-  overflow: hidden;
+.layout-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1600px;
+}
+.center-column {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
-.intro {
-  position: relative;
-  z-index: 2;
-  max-width: 480px;
-  padding-bottom: 48px;
+/* ---------- Side panels (member/guest + admin) ---------- */
+
+.side-panel {
+  flex: 1;
+  max-width: 680px;
+  padding: 56px 56px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #15803d 0%, #22c55e 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 30px 70px rgba(21, 128, 61, 0.2);
 }
 
-.eyebrow {
-  margin: 0 0 10px;
-  color: #166534;
-  font-size: 14px;
+.side-panel svg {
+  color: #86efac;
+  margin-bottom: 16px;
+}
+
+.side-panel-title {
+  margin: 0 0 20px;
+  font-size: 27px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: white;
 }
 
-.left-panel h1 {
-  margin: 0;
-  font-size: 52px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.desc {
-  max-width: 420px;
-  margin: 20px 0 40px;
-  font-size: 17px;
-  line-height: 1.65;
-  color: #475569;
-}
-
-.features {
+.side-panel-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 20px;
+  gap: 13px;
 }
 
-.features li {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.feature-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
-  background: #dff2d8;
-  color: #166534;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.feature-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-top: 2px;
-}
-
-.feature-text strong {
-  font-size: 16px;
-  font-weight: 750;
-}
-
-.feature-text span:last-child {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-/* ---------- Featured books strip ---------- */
-
-.featured {
-  margin-top: 32px;
-}
-
-.featured-label {
-  margin: 0 0 12px;
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748b;
-}
-
-.featured-scroll {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-}
-
-.featured-card {
-  flex: 0 0 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  border: none;
-  background: none;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.featured-cover {
-  width: 96px;
-  height: 132px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: #dff2d8;
-  color: #166534;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
-  margin-bottom: 8px;
-}
-
-.featured-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.featured-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.3;
-  color: #0f172a;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.featured-author {
-  margin: 3px 0 0;
-  font-size: 12px;
-  color: #64748b;
-}
-
-/* Signature element: a row of overlapping "book spines" grounding the
-   panel in its actual subject matter instead of a generic decorative
-   blob/circle. Pure CSS, no external assets. */
-.spines {
+.side-panel-list li {
   position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 130px;
-  margin: 0 -64px 0;
-  padding: 0 40px;
+  padding-left: 20px;
+  font-size: 18.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.spine {
-  flex: 1;
-  border-radius: 6px 6px 0 0;
-  opacity: 0.9;
+.side-panel-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #86efac;
 }
 
-.spine-1 { height: 68%; background: #14532d; }
-.spine-2 { height: 92%; background: #166534; }
-.spine-3 { height: 55%; background: #4d7c0f; }
-.spine-4 { height: 100%; background: #0f172a; }
-.spine-5 { height: 72%; background: #65a30d; }
-.spine-6 { height: 84%; background: #166534; }
-.spine-7 { height: 60%; background: #14532d; }
+/* ---------- Login card ---------- */
 
-/* ---------- Right panel / card ---------- */
 
-.right-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 56px;
-}
+
 
 .login-card {
+  position: relative;
   width: 100%;
-  max-width: 440px;
+  max-width: 580px;
+  padding: 60px 56px 52px;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.1);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #14532d 0%, #166534 45%, #65a30d 100%);
 }
 
 .card-brand {
@@ -673,15 +470,15 @@ onMounted(loadFeaturedBooks);
 .login-card h2 {
   margin: 0 0 10px;
   text-align: center;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
 .subtitle {
-  margin: 0 0 30px;
+  margin: 0 0 34px;
   text-align: center;
-  font-size: 15px;
+  font-size: 16.5px;
   color: #64748b;
 }
 
@@ -699,14 +496,14 @@ onMounted(loadFeaturedBooks);
 label {
   display: block;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 750;
 }
 
 .input-box {
-  height: 54px;
-  margin-bottom: 20px;
-  padding: 0 14px;
+  height: 58px;
+  margin-bottom: 22px;
+  padding: 0 16px;
   border: 1.5px solid #e2e8f0;
   border-radius: 13px;
   display: flex;
@@ -731,7 +528,7 @@ label {
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 15px;
+  font-size: 16px;
   color: inherit;
   font-family: inherit;
 }
@@ -755,12 +552,12 @@ label {
 
 .sign-btn {
   width: 100%;
-  height: 54px;
+  height: 58px;
   border: 0;
   border-radius: 13px;
   background: #111;
   color: white;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -787,12 +584,12 @@ label {
 
 .guest-btn {
   width: 100%;
-  height: 50px;
+  height: 54px;
   border-radius: 13px;
   border: 1.5px solid #e2e8f0;
   background: white;
   color: #334155;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 750;
   cursor: pointer;
   display: flex;
@@ -823,9 +620,8 @@ label {
   background: #0f172a;
   color: #f8fafc;
 }
-
 .login-page.dark .navbar,
-.login-page.dark .layout {
+.login-page.dark .login-card {
   background: #111827;
   border-color: #334155;
 }
@@ -838,11 +634,6 @@ label {
   background: #0f172a;
 }
 
-.login-page.dark .left-panel {
-  background: linear-gradient(160deg, #132315 0%, #111827 70%);
-}
-
-.login-page.dark h1,
 .login-page.dark h2,
 .login-page.dark .brand,
 .login-page.dark .card-brand,
@@ -850,36 +641,8 @@ label {
   color: #f8fafc;
 }
 
-.login-page.dark .feature-text strong {
-  color: #f8fafc;
-}
-
-.login-page.dark .desc,
 .login-page.dark .subtitle,
-.login-page.dark .feature-text span:last-child,
 .login-page.dark .signup {
-  color: #94a3b8;
-}
-
-.login-page.dark .feature-icon {
-  background: #1e293b;
-  color: #4ade80;
-}
-
-.login-page.dark .featured-label {
-  color: #94a3b8;
-}
-
-.login-page.dark .featured-cover {
-  background: #1e293b;
-  color: #4ade80;
-}
-
-.login-page.dark .featured-title {
-  color: #f8fafc;
-}
-
-.login-page.dark .featured-author {
   color: #94a3b8;
 }
 
@@ -903,16 +666,11 @@ label {
 
 @media (max-width: 1100px) {
   .layout {
-    grid-template-columns: 1fr;
     min-height: auto;
   }
 
-  .left-panel {
+  .side-panel {
     display: none;
-  }
-
-  .right-panel {
-    padding: 40px 24px;
   }
 }
 
@@ -925,8 +683,8 @@ label {
     padding: 0 16px;
   }
 
-  .right-panel {
-    padding: 24px 16px;
+  .login-card {
+    padding: 32px 24px;
   }
 }
 </style>
