@@ -18,6 +18,11 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .WithOne(u => u.Member)
         .HasForeignKey<Member>(m => m.UserId)
         .OnDelete(DeleteBehavior.SetNull);  // user silinse bile member kaydı kalsın
+
+    // Aynı member aynı kitabı iki kez wishlist'e ekleyemesin.
+    modelBuilder.Entity<Wishlist>()
+        .HasIndex(w => new { w.MemberId, w.BookId })
+        .IsUnique();
 }
 
     public DbSet<Book> Books => Set<Book>();
@@ -28,4 +33,5 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
     public DbSet<BookCopy> BookCopies => Set<BookCopy>();
     public DbSet<Fine> Fines => Set<Fine>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Wishlist> Wishlists => Set<Wishlist>();
 }

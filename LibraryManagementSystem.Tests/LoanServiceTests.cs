@@ -3,7 +3,9 @@ using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Models;
 using LibraryManagementSystem.API.Repositories.Interfaces;
 using LibraryManagementSystem.API.Services.Implementations;
+using LibraryManagementSystem.API.Hubs;
 using LibraryManagementSystem.API.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
@@ -17,13 +19,37 @@ namespace LibraryManagementSystem.Tests;
 // veritabanı adını alıyor (Guid ile) ki testler birbirini etkilemesin.
 public class LoanServiceTests
 {
-    private static AppDbContext CreateContext()
+   private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
         return new AppDbContext(options);
+    }
+
+    // LoanService, borrow/return sonrası IHubContext<LoanHub> üzerinden
+    // SignalR event'i yayınlıyor. Testlerde gerçek bir hub olmadığı için
+    // Clients.All ve Clients.User(...) çağrılarının no-op bir IClientProxy
+    // döndüreceği sahte (stub) bir hub context oluşturuyoruz.
+    private static IHubContext<LoanHub> CreateHubContextMock()
+    {
+        var clientProxyMock = new Mock<IClientProxy>();
+        clientProxyMock
+            .Setup(proxy => proxy.SendCoreAsync(
+                It.IsAny<string>(),
+                It.IsAny<object[]>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var clientsMock = new Mock<IHubClients>();
+        clientsMock.Setup(c => c.All).Returns(clientProxyMock.Object);
+        clientsMock.Setup(c => c.User(It.IsAny<string>())).Returns(clientProxyMock.Object);
+
+        var hubContextMock = new Mock<IHubContext<LoanHub>>();
+        hubContextMock.Setup(h => h.Clients).Returns(clientsMock.Object);
+
+        return hubContextMock.Object;
     }
 
     [Fact]
@@ -33,6 +59,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var dto = new BorrowBookDto
@@ -46,10 +76,12 @@ public class LoanServiceTests
             .ReturnsAsync((Book?)null);
 
         var service = new LoanService(
-            loanRepositoryMock.Object,
+           loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         var result = await service.BorrowBookAsync(dto, userId: 1, isAdmin: true);
@@ -67,6 +99,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var book = new Book
@@ -97,7 +133,9 @@ public class LoanServiceTests
             loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         var result = await service.BorrowBookAsync(dto, userId: 1, isAdmin: true);
@@ -114,6 +152,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var book = new Book
@@ -171,7 +213,9 @@ public class LoanServiceTests
             loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         // Not: InMemory provider gerçek transaction desteklemez, bu yüzden
@@ -198,6 +242,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var dto = new ReturnBookDto { LoanId = 999 };
@@ -210,7 +258,9 @@ public class LoanServiceTests
             loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         var result = await service.ReturnBookAsync(dto, userId: 1, isAdmin: true);
@@ -227,6 +277,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var dto = new ReturnBookDto { LoanId = 1 };
@@ -247,7 +301,9 @@ public class LoanServiceTests
             loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         var result = await service.ReturnBookAsync(dto, userId: 1, isAdmin: true);
@@ -264,6 +320,10 @@ public class LoanServiceTests
         var loanRepositoryMock = new Mock<ILoanRepository>();
         var bookRepositoryMock = new Mock<IBookRepository>();
         var fineServiceMock = new Mock<IFineService>();
+        var wishlistRepositoryMock = new Mock<IWishlistRepository>();
+        wishlistRepositoryMock
+            .Setup(repo => repo.GetMembersWishlistingBookAsync(It.IsAny<int>()))
+            .ReturnsAsync(new List<Member>());
         await using var context = CreateContext();
 
         var dto = new ReturnBookDto { LoanId = 1, Condition = "Good" };
@@ -319,7 +379,9 @@ public class LoanServiceTests
             loanRepositoryMock.Object,
             bookRepositoryMock.Object,
             fineServiceMock.Object,
-            context);
+            wishlistRepositoryMock.Object,
+            context,
+            CreateHubContextMock());
 
         // Act
         var result = await service.ReturnBookAsync(dto, userId: 1, isAdmin: true);

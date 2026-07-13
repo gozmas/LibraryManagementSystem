@@ -15,6 +15,7 @@ public class LoanService : ILoanService
     private readonly ILoanRepository _loanRepository;
     private readonly IBookRepository _bookRepository;
     private readonly IFineService _fineService;
+    private readonly IWishlistRepository _wishlistRepository;
     private readonly AppDbContext _context;
     private readonly IHubContext<LoanHub> _hubContext;
 
@@ -22,12 +23,14 @@ public class LoanService : ILoanService
         ILoanRepository loanRepository,
         IBookRepository bookRepository,
         IFineService fineService,
+        IWishlistRepository wishlistRepository,
         AppDbContext context,
         IHubContext<LoanHub> hubContext)
     {
         _loanRepository = loanRepository;
         _bookRepository = bookRepository;
         _fineService = fineService;
+        _wishlistRepository = wishlistRepository;
         _context = context;
         _hubContext = hubContext;
     }
@@ -47,6 +50,31 @@ public class LoanService : ILoanService
             action,
             timestamp = DateTime.UtcNow
         });
+    }
+
+    // Bir kitap iade edilip tekrar müsait hale geldiğinde, o kitabı
+    // wishlist'inde bulunduran member'lara SignalR üzerinden hedefli
+    // (herkese değil, sadece ilgili kullanıcıya) bildirim gönderiliyor.
+    // "Clients.User(...)" JWT'deki NameIdentifier claim'ini (User.Id)
+    // kullanıyor; bu yüzden Member değil, Member.UserId hedefleniyor.
+    private async Task NotifyWishlistersAsync(Book book)
+    {
+        var wishlisters = await _wishlistRepository.GetMembersWishlistingBookAsync(book.Id);
+
+        var notifications = wishlisters
+            .Where(member => member.UserId.HasValue)
+            .Select(member => _hubContext.Clients
+                .User(member.UserId!.Value.ToString())
+                .SendAsync("WishlistBookAvailable", new
+                {
+                    bookId = book.Id,
+                    bookTitle = book.Title,
+                    availableCopies = book.AvailableCopies,
+                    totalCopies = book.TotalCopies,
+                    timestamp = DateTime.UtcNow
+                }));
+
+        await Task.WhenAll(notifications);
     }
 
     public async Task<IEnumerable<LoanDto>> GetAllAsync()
@@ -218,6 +246,13 @@ public class LoanService : ILoanService
         if (loan.Book != null)
         {
             await BroadcastBookStatusChangedAsync(loan.Book, "Returned");
+
+            // Sadece kitap gerçekten rafa geri döndüyse (Damaged/Lost değilse)
+            // ve şu an müsait kopyası varsa wishlist'tekilere haber ver.
+            if (copyReturnedToShelf && loan.Book.AvailableCopies > 0)
+            {
+                await NotifyWishlistersAsync(loan.Book);
+            }
         }
 
         return ServiceResult<LoanDto>.Ok(MapToLoanDto(loan));
