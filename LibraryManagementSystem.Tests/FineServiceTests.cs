@@ -43,9 +43,13 @@ public class FineServiceTests
         var fineRepositoryMock = new Mock<IFineRepository>();
         await using var context = CreateContext();
 
+var book = new Book { Id = 1, Title = "Test Book", ISBN = "1234567890123", AuthorId = 1, CategoryId = 1 };
+var member = new Member { Id = 1, FirstName = "Test", LastName = "Member", Email = "test@test.com" };
         var loan = new Loan { Id = 1, BookId = 1, MemberId = 1 };
         var fine = new Fine { Id = 1, LoanId = 1, Loan = loan, Amount = 10, IsPaid = true };
 
+context.Books.Add(book);
+context.Members.Add(member);
         context.Loans.Add(loan);
         context.Fines.Add(fine);
         await context.SaveChangesAsync();
@@ -64,9 +68,13 @@ public class FineServiceTests
         var fineRepositoryMock = new Mock<IFineRepository>();
         await using var context = CreateContext();
 
+var book = new Book { Id = 1, Title = "Test Book", ISBN = "1234567890123", AuthorId = 1, CategoryId = 1 };
+var member = new Member { Id = 1, FirstName = "Test", LastName = "Member", Email = "test@test.com" };
         var loan = new Loan { Id = 1, BookId = 1, MemberId = 1 };
         var fine = new Fine { Id = 1, LoanId = 1, Loan = loan, Amount = 10, IsPaid = false };
 
+context.Books.Add(book);
+context.Members.Add(member);
         context.Loans.Add(loan);
         context.Fines.Add(fine);
         await context.SaveChangesAsync();

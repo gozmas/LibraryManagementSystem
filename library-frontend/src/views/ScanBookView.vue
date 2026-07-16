@@ -195,7 +195,7 @@ const showMessage = (text, type = "success") => {
 };
 
 const startScan = async () => {
-  duplicateWarning.value = "";
+  duplicateBook.value = null;
   notFoundWarning.value = false;
   showForm.value = false;
 
@@ -237,7 +237,7 @@ const stopScan = async () => {
 
 const resetForm = () => {
   showForm.value = false;
-  duplicateWarning.value = null;
+  duplicateBook.value = null;
   notFoundWarning.value = false;
   manualIsbn.value = "";
   Object.assign(form, {
@@ -261,7 +261,7 @@ const lookupIsbn = async (isbn) => {
   }
 
   message.value = "";
-  duplicateWarning.value = "";
+  duplicateBook.value = null;
   notFoundWarning.value = false;
   showForm.value = false;
   loadingLookup.value = true;
