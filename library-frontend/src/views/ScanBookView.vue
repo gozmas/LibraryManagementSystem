@@ -277,9 +277,12 @@ const lookupIsbn = async (isbn) => {
       return;
     }
 
-    const googleRes = await axios.get(GOOGLE_BOOKS_URL, {
-      params: { q: `isbn:${cleanIsbn}` },
-    });
+   const googleRes = await axios.get(GOOGLE_BOOKS_URL, {
+  params: {
+    q: `isbn:${cleanIsbn}`,
+    key: import.meta.env.VITE_GOOGLE_BOOKS_API_KEY,
+  },
+});
 
     const item = googleRes.data.items?.[0];
 
