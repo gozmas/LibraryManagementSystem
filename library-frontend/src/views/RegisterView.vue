@@ -89,8 +89,15 @@
             <label>Password</label>
             <input v-model="password" type="password" placeholder="••••••••" />
 
-            <label>Confirm Password</label>
+           <label>Confirm Password</label>
             <input v-model="confirmPassword" type="password" placeholder="••••••••" />
+
+            <label>I am registering as</label>
+            <select v-model="role">
+              <option value="Member">Member</option>
+              <option value="Student">Student</option>
+              <option value="Academic">Academic</option>
+            </select>
 
             <button class="submit-btn" type="submit" :disabled="loading">
               {{ loading ? "Creating account..." : "Create Account" }}
@@ -122,6 +129,7 @@ const username = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
+const role = ref("Member");
 
 const loading = ref(false);
 const errorMessage = ref("");
@@ -166,6 +174,7 @@ const handleRegister = async () => {
       username: username.value,
       email: email.value,
       password: password.value,
+      role: role.value,
     });
 
     successMessage.value = "Account created successfully. Redirecting to login...";
@@ -379,6 +388,21 @@ input {
 }
 
 input:focus {
+  border-color: #166534;
+}
+select {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1.5px solid #cbd5e1;
+  outline: none;
+  font-size: 16px;
+  font-weight: 700;
+  background: white;
+}
+
+select:focus {
   border-color: #166534;
 }
 

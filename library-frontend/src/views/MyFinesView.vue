@@ -161,7 +161,7 @@ const getFines = async () => {
       return;
     }
 
-    if (role !== "Member" && role !== "Student") {
+   if (role === "Admin") {
       message.value = "Only members can view fines.";
       return;
     }

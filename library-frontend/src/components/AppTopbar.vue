@@ -99,7 +99,7 @@ const router = useRouter();
 const role = localStorage.getItem("role");
 
 const isAdmin = computed(() => role === "Admin");
-const isMember = computed(() => role === "Member" || role === "Student");
+const isMember = computed(() => role !== "Admin");
 
 const goHome = () => router.push("/home");
 const goLogin = () => router.push("/login");

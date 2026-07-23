@@ -46,8 +46,8 @@
       <p v-if="message" class="message">{{ message }}</p>
 
       <section class="actions">
-        <button
-          v-if="role === 'Member'"
+       <button
+          v-if="role !== 'Admin'"
           class="borrow-btn"
           :disabled="!book.isAvailable || loading"
           @click="borrowBook"
@@ -56,7 +56,7 @@
         </button>
 
         <button
-          v-if="role === 'Member'"
+          v-if="role !== 'Admin'"
           class="wishlist-btn"
           :class="{ active: isWishlisted }"
           :disabled="wishlistLoading"
@@ -178,7 +178,7 @@ const getBook = async () => {
 };
 
 const getCurrentMember = async () => {
-  if (!token || role !== "Member") return;
+  if (!token || role === "Admin") return;
 
   const response = await axios.get(`${API_BASE_URL}/api/members/me`, {
     headers: {
@@ -189,10 +189,9 @@ const getCurrentMember = async () => {
   member.value = response.data.data || response.data;
 };
 
-// Wishlist durumu ayrı bir "check" endpoint'i yerine, mevcut wishlist
-// listesi çekilip bu kitabın id'si içinde mi diye bakılarak belirleniyor.
+
 const getWishlistStatus = async () => {
-  if (!token || role !== "Member") return;
+  if (!token || role === "Admin") return;
 
   try {
     const response = await axios.get(`${API_BASE_URL}/api/wishlist/my`, {
@@ -208,7 +207,7 @@ const getWishlistStatus = async () => {
 };
 
 const toggleWishlist = async () => {
-  if (!token || role !== "Member") {
+  if (!token || role === "Admin") {
     message.value = "Please login as a member to use your wishlist.";
     return;
   }
@@ -243,8 +242,8 @@ const borrowBook = async () => {
     return;
   }
 
-  if (role !== "Member") {
-    message.value = "Only members can borrow books.";
+  if (role === "Admin") {
+    message.value = "Admins should use 'Issue a Loan for This Book' instead.";
     return;
   }
 

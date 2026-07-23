@@ -127,7 +127,7 @@ const getWishlist = async () => {
       return;
     }
 
-    if (role !== "Member" && role !== "Student") {
+    if (role === "Admin") {
       message.value = "Only members can use a wishlist.";
       return;
     }
@@ -171,7 +171,7 @@ const goToBook = (bookId) => {
 // BookStatusChanged event'i — burada sadece wishlist'te olan kitap
 // eşleşirse ilgili satırı güncelliyoruz.
 const startLiveUpdates = async () => {
-  if (!token || (role !== "Member" && role !== "Student")) return;
+  if (!token || role === "Admin") return;
 
   connection = new signalR.HubConnectionBuilder()
     .withUrl(`${API_BASE_URL}/hubs/loan`, {

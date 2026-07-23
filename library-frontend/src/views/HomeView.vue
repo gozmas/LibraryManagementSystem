@@ -285,7 +285,7 @@ const token = localStorage.getItem("token");
 const storedEmail = localStorage.getItem("email") || "";
 
 const isAdmin = computed(() => role === "Admin");
-const isMember = computed(() => role === "Member" || role === "Student");
+const isMember = computed(() => role !== "Admin");
 
 const displayEmail = computed(() => {
   if (isAdmin.value) return storedEmail || "admin@library.com";
