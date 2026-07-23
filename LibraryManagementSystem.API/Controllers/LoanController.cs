@@ -36,7 +36,7 @@ public class LoanController : ControllerBase
             loans));
     }
 
-    [Authorize(Roles = "Admin,Member,Student")]
+    [Authorize(Roles = "Admin,Member,Student,Academic")]
     [HttpPost("borrow")]
     public async Task<IActionResult> BorrowBook(BorrowBookDto dto)
     {
@@ -80,7 +80,7 @@ public class LoanController : ControllerBase
             result.Data));
     }
 
-    [Authorize(Roles = "Admin,Member,Student")]
+    [Authorize(Roles = "Admin,Member,Student,Academic")]
     [HttpPost("return")]
     public async Task<IActionResult> ReturnBook(ReturnBookDto dto)
     {
@@ -123,7 +123,7 @@ public class LoanController : ControllerBase
             result.Data));
     }
 
-    [Authorize(Roles = "Member,Student")]
+    [Authorize(Roles = "Member,Student,Academic")]
     [HttpGet("my")]
     public async Task<IActionResult> GetMyLoans()
     {

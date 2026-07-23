@@ -35,11 +35,14 @@ namespace LibraryManagementSystem.API.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
                 return BadRequest(new ApiResponse<object>(false, "Email already exists.", null));
 
+            var allowedRoles = new[] { "Member", "Student", "Academic" };
+            var requestedRole = allowedRoles.Contains(dto.Role) ? dto.Role! : "Member";
+
             var user = new User
             {
                 Username = dto.Username,
                 Email    = dto.Email,
-                Role     = "Member"
+                Role     = requestedRole
             };
             user.PasswordHash = new PasswordHasher<User>().HashPassword(user, dto.Password);
 
@@ -74,6 +77,9 @@ namespace LibraryManagementSystem.API.Controllers
 
             if (user == null)
                 return Unauthorized(new ApiResponse<object>(false, "Invalid email or password.", null));
+
+                if (!user.IsActive)
+    return Unauthorized(new ApiResponse<object>(false, "This account has been deactivated.", null));
 
             var passwordHasher = new PasswordHasher<User>();
             var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
@@ -110,6 +116,59 @@ namespace LibraryManagementSystem.API.Controllers
                 email    = user.Email,
                 role     = user.Role
             }));
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            
+            if (user == null || !user.IsActive)
+            {
+                return Ok(new ApiResponse<object>(
+                    true,
+                    "If this email is registered, a password reset link has been sent.",
+                    null));
+            }
+
+            user.PasswordResetToken = Guid.NewGuid().ToString("N");
+            user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(30);
+
+            await _context.SaveChangesAsync();
+
+           
+            return Ok(new ApiResponse<object>(
+                true,
+                "If this email is registered, a password reset link has been sent.",
+                new { resetToken = user.PasswordResetToken }));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        {
+            if (dto.NewPassword != dto.ConfirmNewPassword)
+                return BadRequest(new ApiResponse<object>(false, "New password and confirmation password do not match.", null));
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email);
+
+            if (user == null ||
+                user.PasswordResetToken != dto.Token ||
+                user.PasswordResetTokenExpiry == null ||
+                user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                return BadRequest(new ApiResponse<object>(false, "Invalid or expired reset token.", null));
+            }
+
+            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, dto.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse<object>(true, "Password has been reset successfully.", null));
         }
     }
 }

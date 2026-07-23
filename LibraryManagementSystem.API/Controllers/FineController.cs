@@ -60,7 +60,7 @@ public class FineController : ControllerBase
             fine));
     }
 
-    [Authorize(Roles = "Member,Student")]
+    [Authorize(Roles = "Member,Student,Academic")]
     [HttpGet("my")]
     public async Task<IActionResult> GetMyFines()
     {
@@ -86,7 +86,7 @@ public class FineController : ControllerBase
             fines));
     }
 
-    [Authorize(Roles = "Admin,Member,Student")]
+    [Authorize(Roles = "Admin,Member,Student,Academic")]
     [HttpPut("{id}/pay")]
     public async Task<IActionResult> PayFine(int id)
     {

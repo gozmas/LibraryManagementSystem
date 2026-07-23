@@ -2,6 +2,7 @@ using LibraryManagementSystem.API.Data;
 using LibraryManagementSystem.API.Dtos;
 using LibraryManagementSystem.API.Extensions;
 using LibraryManagementSystem.API.Models;
+using LibraryManagementSystem.API.Responses;
 using LibraryManagementSystem.API.Services.Interfaces;
 using LibraryManagementSystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -46,7 +47,7 @@ public class MemberController : ControllerBase
         return Ok(member);
     }
 
-    [Authorize(Roles = "Member,Student")]
+    [Authorize(Roles = "Member,Student,Academic")]
     [HttpGet("me")]
     public async Task<IActionResult> GetMyMemberProfile()
     {
@@ -73,7 +74,7 @@ public class MemberController : ControllerBase
         });
     }
 
-    [Authorize(Roles = "Member,Student")]
+    [Authorize(Roles = "Member,Student,Academic")]
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMyProfile(UpdateMyProfileDto dto)
     {
@@ -131,7 +132,7 @@ public class MemberController : ControllerBase
         });
     }
 
-    [Authorize(Roles = "Member,Student")]
+    [Authorize(Roles = "Member,Student,Academic")]
     [HttpPut("me/change-password")]
     public async Task<IActionResult> ChangeMyPassword(ChangePasswordDto dto)
     {
@@ -187,17 +188,34 @@ public class MemberController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteMember(int id)
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> DeleteMember(int id)
+{
+    var member = await _context.Members
+        .Include(m => m.Loans)
+        .Include(m => m.User)
+        .FirstOrDefaultAsync(m => m.Id == id);
+
+    if (member == null)
+        return NotFound();
+
+    var hasActiveLoans = member.Loans.Any(l => !l.IsReturned);
+
+    if (hasActiveLoans)
     {
-        var member = await _memberService.GetByIdAsync(id);
-
-        if (member == null)
-            return NotFound();
-
-        await _memberService.DeleteAsync(member);
-
-        return NoContent();
+        return BadRequest(new ApiResponse<object>(
+            false,
+            "This member has active loans and cannot be removed until all books are returned.",
+            null));
     }
+
+    if (member.User != null)
+    {
+        member.User.IsActive = false;
+        await _context.SaveChangesAsync();
+    }
+
+    return NoContent();
+}
 
 }

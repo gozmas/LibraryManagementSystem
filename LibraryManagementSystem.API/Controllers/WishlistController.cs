@@ -9,7 +9,7 @@ namespace LibraryManagementSystem.API.Controllers;
 
 [Route("api/wishlist")]
 [ApiController]
-[Authorize(Roles = "Member,Student")]
+[Authorize(Roles = "Member,Student,Academic")]
 public class WishlistController : ControllerBase
 {
     private readonly IWishlistService _wishlistService;

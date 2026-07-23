@@ -22,7 +22,7 @@ namespace LibraryManagementSystem.API.Controllers
             return Ok("This endpoint requires a valid JWT token.");
         }
 
-        [Authorize(Roles = "Member")]
+        [Authorize(Roles = "Member,Student,Academic")]
         [HttpGet("member")]
         public IActionResult MemberOnly()
         {

@@ -13,6 +13,11 @@ namespace LibraryManagementSystem.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public string Role { get; set; } = "Member";
+        public bool IsActive { get; set; } = true;
+
+        public string? PasswordResetToken { get; set; }
+
+        public DateTime? PasswordResetTokenExpiry { get; set; }
 
         public Member? Member { get; set; }
     }

@@ -12,6 +12,10 @@ namespace LibraryManagementSystem.API.Services.Implementations;
 
 public class LoanService : ILoanService
 {
+   private const int MaxActiveLoansPerMember = 3;
+    private const int StudentLoanDurationDays = 21;
+    private const int AcademicLoanDurationDays = 30;
+    private const int DefaultLoanDurationDays = 10;
     private readonly ILoanRepository _loanRepository;
     private readonly IBookRepository _bookRepository;
     private readonly IFineService _fineService;
@@ -123,8 +127,32 @@ public class LoanService : ILoanService
             if (currentMember == null)
                 return ServiceResult<LoanDto>.Fail("No member profile found for the current user.", 404);
 
-            memberId = currentMember.Id;
+        memberId = currentMember.Id;
         }
+
+        var activeLoanCount = await _context.Loans
+            .CountAsync(l => l.MemberId == memberId && !l.IsReturned);
+
+        if (activeLoanCount >= MaxActiveLoansPerMember)
+        {
+            return ServiceResult<LoanDto>.Fail(
+                $"This member already has {MaxActiveLoansPerMember} active loans. Return a book before borrowing another.",
+                409);
+        }
+
+        // Öğrenci üyeler için daha kısa, diğer üye tipleri (ör. akademisyen/
+        // personel) için daha uzun ödünç süresi uygulanıyor.
+        var memberRole = await _context.Members
+            .Where(m => m.Id == memberId)
+            .Select(m => m.User != null ? m.User.Role : "Member")
+            .FirstOrDefaultAsync();
+
+        var loanDurationDays = memberRole switch
+        {
+            "Student" => StudentLoanDurationDays,
+            "Academic" => AcademicLoanDurationDays,
+            _ => DefaultLoanDurationDays
+        };
 
         var loan = new Loan
         {
@@ -132,7 +160,7 @@ public class LoanService : ILoanService
             BookCopyId = availableCopy.Id,
             MemberId = memberId,
             BorrowDate = DateTime.UtcNow,
-            DueDate = DateTime.UtcNow.AddDays(14),
+            DueDate = DateTime.UtcNow.AddDays(loanDurationDays),
             IsReturned = false
         };
 
@@ -141,11 +169,7 @@ public class LoanService : ILoanService
         book.AvailableCopies -= 1;
         book.IsAvailable = book.AvailableCopies > 0;
 
-        // Loan eklenmesi, kopya durumunun ve kitabın güncellenmesi tek bir
-        // veritabanı işlemi (transaction) olarak ele alınmalı: biri başarısız
-        // olursa hepsi geri alınmalı. Repository'lerin kendi SaveChangesAsync
-        // çağrıları aynı DbContext'i paylaştığı için pratikte zaten birlikte
-        // gidiyorlardı; burada bunu bilinçli ve açık hale getiriyoruz.
+       
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
